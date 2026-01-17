@@ -1,0 +1,22 @@
+{
+  "name": "port-authority",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/beekley/port-authority.git"
+  },
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.9",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.5.2",
+    "vitest": "^4.0.17"
+  }
+}
