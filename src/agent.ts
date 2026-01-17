@@ -1,0 +1,120 @@
+import { GlobalMarket } from "./market";
+import { Price, Quantity, ResourceID, Transaction } from "./types";
+
+export interface RecipeDef {
+  displayName: string;
+  // processTimeTicks: number; TODO
+  // Quantity per resource
+  inputs: Map<ResourceID, Quantity>;
+  outputs: Map<ResourceID, Quantity>;
+}
+
+// The thing that takes in resources and ouputs resources
+export class Agent {
+  public wealth: Price;
+  private readonly storage: Map<ResourceID, Quantity> = new Map();
+
+  private readonly recipes: RecipeDef[] = [];
+  private readonly market: GlobalMarket;
+
+  constructor(
+    initialWealth: Price,
+    recipes: RecipeDef[],
+    market: GlobalMarket,
+  ) {
+    this.wealth = initialWealth;
+    this.recipes.push(...recipes);
+    this.market = market;
+  }
+
+  public tick() {
+    // Try to store one recipe's worth of resources.
+    for (const recipe of this.recipes) {
+      for (const [resourceId, inputQuantity] of recipe.inputs) {
+        const storedQuantity = this.storage.get(resourceId) || 0;
+        const neededQuantity = inputQuantity - storedQuantity;
+        if (neededQuantity < 0) continue;
+
+        const transaction = this.buyResource(resourceId, neededQuantity);
+        this.storage.set(resourceId, storedQuantity + transaction.quantity);
+      }
+    }
+
+    // Produce with as many resources as are stored.
+    for (const recipe of this.recipes) {
+      let maxProductionQuantity: Quantity = 0;
+      for (const [resourceId, inputQuantity] of recipe.inputs) {
+        const storedQuantity = this.storage.get(resourceId) || 0;
+        maxProductionQuantity = Math.max(
+          maxProductionQuantity,
+          Math.floor(storedQuantity / inputQuantity),
+        );
+      }
+      for (let i = 0; i < maxProductionQuantity; i++) {
+        this.produceOne(recipe);
+      }
+    }
+
+    // Sell all outputs to market.
+    for (const recipe of this.recipes) {
+      for (const [resourceId, _] of recipe.outputs) {
+        const storedQuantity = this.storage.get(resourceId) || 0;
+        const market = this.market.get(resourceId);
+        if (!market) {
+          console.log(`Agent could not sell ${resourceId}: no market`);
+          continue;
+        }
+        const transaction = market.sellToMarket(storedQuantity);
+        this.storage.set(resourceId, storedQuantity - transaction.quantity);
+        console.log(`Sold ${transaction.quantity} ${resourceId} to market.`);
+      }
+    }
+  }
+
+  private produceOne(recipe: RecipeDef): void {
+    for (const [resourceId, inputQuantity] of recipe.inputs) {
+      const storedQuantity = this.storage.get(resourceId) || 0;
+      if (storedQuantity < inputQuantity) {
+        throw new Error(
+          `Could not produce: insufficient ${resourceId} (${storedQuantity} < ${inputQuantity})`,
+        );
+      }
+      this.storage.set(resourceId, storedQuantity - inputQuantity);
+    }
+
+    for (const [resourceId, outputQuantity] of recipe.outputs) {
+      const storedQuantity = this.storage.get(resourceId) || 0;
+      this.storage.set(resourceId, storedQuantity + outputQuantity);
+      console.log(
+        `Produced ${outputQuantity} ${resourceId} (${recipe.displayName})`,
+      );
+    }
+  }
+
+  private buyResource(resourceId: ResourceID, quantity: number): Transaction {
+    const resourceMarket = this.market.get(resourceId);
+    if (!resourceMarket) {
+      console.log(`Agent could not buy ${quantity} ${resourceId}: no market`);
+      return { resourceId, quantity: 0, totalPrice: 0 };
+    }
+
+    // Buy as many as the agent can afford.
+    const totalCost = resourceMarket.price * quantity;
+    if (totalCost < this.wealth) {
+      const transaction = resourceMarket.buyFromMarket(quantity);
+      this.wealth -= transaction.totalPrice;
+      console.log(
+        `Agent bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice} (full order)`,
+      );
+      return transaction;
+    }
+
+    const affordableQuantity = Math.floor(this.wealth / resourceMarket.price);
+    const transaction = resourceMarket.buyFromMarket(affordableQuantity);
+    this.wealth -= transaction.totalPrice;
+    console.log(
+      `Agent bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice} (partial order ${transaction.quantity} / ${quantity})`,
+    );
+    return transaction;
+  }
+}

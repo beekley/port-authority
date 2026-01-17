@@ -1,30 +1,37 @@
-import { ResourceID } from "./types";
+import { Price, Quantity, ResourceID, Transaction } from "./types";
 
 const PRICE_INCREASE_FRACTION = 0.1;
+
+export type GlobalMarket = Map<ResourceID, ResourceMarket>;
 
 // Sets the current price for a resource
 export class ResourceMarket {
   public readonly resourceId: ResourceID;
-  public stock: number = 0;
-  public price: number; // Do not set except within this class
+  public stock: Quantity = 0;
+  public price: Price; // Do not set except within this class
 
   // How many of the resource were produced (and sold) to the market.
   // Includes imports?
-  private tickProductionCount: number = 0;
+  private tickProductionCount: Quantity = 0;
   // How many of the resource were consumed (and bought) from the market.
-  private tickConsumptionCount: number = 0;
+  private tickConsumptionCount: Quantity = 0;
 
-  constructor(resourceId: ResourceID, initialPrice: number) {
+  constructor(resourceId: ResourceID, initialPrice: Price) {
     this.resourceId = resourceId;
     this.price = initialPrice;
   }
 
-  public sellToMarket(quantity: number) {
+  public sellToMarket(quantity: Quantity): Transaction {
     this.tickProductionCount += quantity;
     this.stock += quantity;
+    return {
+      resourceId: this.resourceId,
+      quantity,
+      totalPrice: this.price * quantity,
+    };
   }
 
-  public buyFromMarket(quantity: number) {
+  public buyFromMarket(quantity: Quantity): Transaction {
     // Check if enough in stock.
     if (this.stock < quantity) {
       // Responsibility of caller to prevent this.
@@ -32,6 +39,11 @@ export class ResourceMarket {
     }
     this.tickConsumptionCount += quantity;
     this.stock -= quantity;
+    return {
+      resourceId: this.resourceId,
+      quantity,
+      totalPrice: this.price * quantity,
+    };
   }
 
   public tick() {
