@@ -1,8 +1,8 @@
 import { GlobalMarket } from "./market";
 import { ResourceID, Quantity, Price, Transaction } from "./types";
 
-// Ships arrive at port and decide to sell or buy if prices meet their expectations.
-export class Ship {
+// Merchants arrive at port and decide to sell or buy if prices meet their expectations.
+export class Merchant {
   // TODO: Should probably have an ID.
   public wealth: Price;
   public readonly cargo: Map<ResourceID, Quantity>;
@@ -36,13 +36,13 @@ export class Ship {
   private sell(resourceId: ResourceID): Transaction {
     const market = this.market.get(resourceId);
     if (!market) {
-      throw new Error(`Ship could not sell ${resourceId}: no market`);
+      throw new Error(`Merchant could not sell ${resourceId}: no market`);
     }
 
     const minSalePrice = this.minSalePrices.get(resourceId);
     if (!minSalePrice) {
       throw new Error(
-        `Ship could not sell ${resourceId}: no desired sale price`,
+        `Merchant could not sell ${resourceId}: no desired sale price`,
       );
     }
     if (market.price >= minSalePrice) {
@@ -51,7 +51,7 @@ export class Ship {
       this.wealth += transaction.totalPrice;
       this.cargo.set(resourceId, cargoQuantity - transaction.quantity);
       console.log(
-        `Ship sold ${transaction.quantity} ${resourceId} for ${transaction.totalPrice}`,
+        `Merchant sold ${transaction.quantity} ${resourceId} for ${transaction.totalPrice}`,
       );
       return transaction;
     }
@@ -61,17 +61,19 @@ export class Ship {
   private buy(resourceId: ResourceID): Transaction {
     const market = this.market.get(resourceId);
     if (!market) {
-      throw new Error(`Ship could not buy ${resourceId}: no market`);
+      throw new Error(`Merchant could not buy ${resourceId}: no market`);
     }
 
     const maxBuyPrice = this.maxBuyPrices.get(resourceId);
     if (!maxBuyPrice) {
-      throw new Error(`Ship could not buy ${resourceId}: no desired buy price`);
+      throw new Error(
+        `Merchant could not buy ${resourceId}: no desired buy price`,
+      );
     }
     if (market.price <= maxBuyPrice) {
       const cargoQuantity = this.cargo.get(resourceId) || 0;
 
-      // Buy as many as the ship can afford.
+      // Buy as many as the merchant can afford.
       const maxAffordableQuantity = Math.floor(this.wealth / market.price);
       const quantity = Math.min(maxAffordableQuantity, market.stock);
 
@@ -79,7 +81,7 @@ export class Ship {
       this.wealth -= transaction.totalPrice;
       this.cargo.set(resourceId, cargoQuantity + transaction.quantity);
       console.log(
-        `Ship bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice}`,
+        `Merchant bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice}`,
       );
       return transaction;
     }

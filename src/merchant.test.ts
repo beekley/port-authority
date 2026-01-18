@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, test } from "vitest";
-import { Ship } from "./port";
+import { Merchant } from "./merchant";
 import { GlobalMarket, ResourceMarket } from "./market";
 import { ResourceID, Quantity, Price } from "./types";
 
-describe("Ship", () => {
-  let ship: Ship;
+describe("Merchant", () => {
+  let merchant: Merchant;
   let market: GlobalMarket;
   let foodMarket: ResourceMarket;
   let waterMarket: ResourceMarket;
@@ -50,8 +50,8 @@ describe("Ship", () => {
       expectedWealth,
       expectedCargo,
     }) => {
-      // Create the ship.
-      ship = new Ship(
+      // Create the merchant.
+      merchant = new Merchant(
         initialWealth,
         cargo,
         minSalePrices,
@@ -60,12 +60,12 @@ describe("Ship", () => {
       );
 
       // Simulate the sales / purchases.
-      ship.tick();
+      merchant.tick();
 
       // Check conditions.
-      expect(ship.wealth).toBe(expectedWealth);
+      expect(merchant.wealth).toBe(expectedWealth);
       for (const [resourceId, expectedQuantity] of expectedCargo) {
-        expect(ship.cargo.get(resourceId) || 0).toBe(expectedQuantity);
+        expect(merchant.cargo.get(resourceId) || 0).toBe(expectedQuantity);
       }
     },
   );
