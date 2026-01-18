@@ -1,4 +1,4 @@
-export type ResourceID = "food" | "steel";
+export type ResourceID = "food" | "steel" | "water";
 export type Quantity = number;
 export type Price = number;
 

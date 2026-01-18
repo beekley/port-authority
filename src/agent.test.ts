@@ -13,7 +13,7 @@ describe("Agent", () => {
     {
       displayName: "Burger",
       inputs: new Map<ResourceID, Quantity>([["food", 1]]),
-      outputs: new Map<ResourceID, Quantity>([["steel", 2]]), // placeholder
+      outputs: new Map<ResourceID, Quantity>([["steel", 2]]),
     },
   ];
 
