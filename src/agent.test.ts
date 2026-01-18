@@ -58,4 +58,21 @@ describe("Agent", () => {
     // It produces 2 steel. Storage becomes 2. Then it sells them.
     expect(steelMarket.stock).toBe(2);
   });
+
+  it("should update state to 'insufficient production' after MAX_TICKS_WITHOUT_PRODUCTION ticks", () => {
+    foodMarket.sellToMarket(1);
+    agent.wealth = 0; // Agent cannot afford resources.
+
+    for (let i = 0; i < 6; i++) {
+      agent.tick();
+    }
+
+    expect(agent.state).toBe("insufficient production");
+
+    // Magically give it wealth and it should produce again.
+    agent.wealth = 100;
+    agent.tick();
+
+    expect(agent.state).toBe("producing");
+  });
 });

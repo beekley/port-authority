@@ -1,6 +1,10 @@
 import { GlobalMarket } from "./market";
 import { Price, Quantity, ResourceID, Transaction } from "./types";
 
+const MAX_TICKS_WITHOUT_PRODUCTION = 5;
+
+export type State = "producing" | "insufficient production";
+
 export interface RecipeDef {
   displayName: string;
   // processTimeTicks: number; TODO
@@ -11,9 +15,13 @@ export interface RecipeDef {
 
 // The thing that takes in resources and ouputs resources
 export class Agent {
+  // Variables
+  public state: State = "producing";
   public wealth: Price;
   private readonly storage: Map<ResourceID, Quantity> = new Map();
+  private ticksWithoutProduction: number = 0;
 
+  // Constants
   private readonly recipes: RecipeDef[] = [];
   private readonly market: GlobalMarket;
 
@@ -41,8 +49,8 @@ export class Agent {
     }
 
     // Produce with as many resources as are stored.
+    let maxProductionQuantity: Quantity = 0;
     for (const recipe of this.recipes) {
-      let maxProductionQuantity: Quantity = 0;
       for (const [resourceId, inputQuantity] of recipe.inputs) {
         const storedQuantity = this.storage.get(resourceId) || 0;
         maxProductionQuantity = Math.max(
@@ -56,6 +64,7 @@ export class Agent {
     }
 
     // Sell all outputs to market.
+    let soldQuantity = 0;
     for (const recipe of this.recipes) {
       for (const [resourceId, _] of recipe.outputs) {
         const storedQuantity = this.storage.get(resourceId) || 0;
@@ -65,9 +74,26 @@ export class Agent {
           continue;
         }
         const transaction = market.sellToMarket(storedQuantity);
+        soldQuantity += transaction.quantity;
         this.storage.set(resourceId, storedQuantity - transaction.quantity);
         console.log(`Sold ${transaction.quantity} ${resourceId} to market.`);
       }
+    }
+
+    // Check if there was no production.
+    if (maxProductionQuantity === 0 && soldQuantity === 0) {
+      console.log(
+        `No production (${this.ticksWithoutProduction} / ${MAX_TICKS_WITHOUT_PRODUCTION} ticks without production).`,
+      );
+      this.ticksWithoutProduction++;
+    } else {
+      this.ticksWithoutProduction = 0;
+      this.state = "producing";
+    }
+
+    // Leave
+    if (this.ticksWithoutProduction > MAX_TICKS_WITHOUT_PRODUCTION) {
+      this.state = "insufficient production";
     }
   }
 
