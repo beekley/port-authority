@@ -143,4 +143,18 @@ export class Agent {
     );
     return transaction;
   }
+
+  public prepareForEviction() {
+    // Sell everything.
+    for (const [resourceId, _] of this.storage.entries()) {
+      const storedQuantity = this.storage.get(resourceId) || 0;
+      const market = this.market.get(resourceId);
+      if (!market) {
+        console.log(`Agent could not sell ${resourceId}: no market`);
+        continue;
+      }
+      const transaction = market.sellToMarket(storedQuantity);
+    }
+    console.log(`Agent ready for eviction`);
+  }
 }

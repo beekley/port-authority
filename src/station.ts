@@ -22,5 +22,15 @@ export class Station {
     }
     // Remove agents that aren't producing.
     // Add new agents to meet demand.
+    for (const agent of this.agents) {
+      if (agent.state === "insufficient production") {
+        this.evictAgent(agent);
+      }
+    }
+  }
+
+  private evictAgent(agent: Agent) {
+    agent.prepareForEviction();
+    this.agents.splice(this.agents.indexOf(agent), 1);
   }
 }
