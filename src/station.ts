@@ -49,13 +49,7 @@ export class Station {
     for (const facility of this.facilities) {
       // Add new agent to meet demand
       if (!facility.agent) {
-        for (const recipe of this.availableRecipes) {
-          // TODO: sort by most profitable.
-          if (profitability(this.market, recipe) > 0) {
-            facility.agent = new Agent(100, [recipe], this.market);
-            break;
-          }
-        }
+        this.addAgent(facility);
         continue;
       }
 
@@ -66,8 +60,26 @@ export class Station {
     }
   }
 
+  private addAgent(facility: Facility) {
+    if (facility.agent) return;
+
+    let mostProfitableRecipe: RecipeDef | undefined;
+    let mostProfitableProfit = 0;
+    for (const recipe of this.availableRecipes) {
+      const profit = profitability(this.market, recipe);
+      if (profit > 0 && profit > mostProfitableProfit) {
+        mostProfitableRecipe = recipe;
+        mostProfitableProfit = profit;
+      }
+    }
+    if (mostProfitableRecipe) {
+      facility.agent = new Agent(100, [mostProfitableRecipe], this.market);
+    }
+  }
+
   private evictAgent(facility: Facility) {
     if (!facility.agent) return;
+
     facility.agent.prepareForEviction();
     facility.agent = undefined;
   }
