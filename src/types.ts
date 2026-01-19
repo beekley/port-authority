@@ -7,3 +7,11 @@ export interface Transaction {
   quantity: Quantity;
   totalPrice: Price;
 }
+
+export interface RecipeDef {
+  displayName: string;
+  // processTimeTicks: number; TODO
+  // Quantity per resource
+  inputs: Map<ResourceID, Quantity>;
+  outputs: Map<ResourceID, Quantity>;
+}

@@ -2,18 +2,25 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { Station } from "./station";
 import { Agent } from "./agent";
 import { GlobalMarket, ResourceMarket } from "./market";
+import { RecipeDef } from "./types";
 
 describe("Station", () => {
   let station: Station;
   let market: GlobalMarket;
   let foodMarket: ResourceMarket;
+  let steelMarket: ResourceMarket;
   let agents: Agent[];
+  let recipes: RecipeDef[];
 
   beforeEach(() => {
     foodMarket = new ResourceMarket("food", 10);
-    market = new Map([["food", foodMarket]]);
+    steelMarket = new ResourceMarket("steel", 20);
+    market = new Map([
+      ["food", foodMarket],
+      ["steel", steelMarket],
+    ]);
     agents = [];
-    station = new Station(market, agents);
+    station = new Station(market, agents, []);
   });
 
   it("should tick the agents and markets", () => {
@@ -25,7 +32,7 @@ describe("Station", () => {
     const mockAgent = new Agent(100, [], market);
     mockAgent.tick = () => agentTickedCount++;
 
-    station = new Station(market, [mockAgent]);
+    station = new Station(market, [mockAgent], []);
     station.tick();
 
     expect(marketTickedCount).toBe(1);
@@ -48,9 +55,12 @@ describe("Station", () => {
     mockAgent2.tick = () => agent2TickedCount++;
 
     mockAgent2.state = "insufficient production";
-    station = new Station(market, [mockAgent1, mockAgent2]);
+    station = new Station(market, [mockAgent1, mockAgent2], []);
     station.tick();
-    expect(station["agents"]).toEqual([mockAgent1]);
+    expect(station["facilities"].map((f) => f.agent)).toEqual([
+      mockAgent1,
+      undefined,
+    ]);
     expect(agent1TickedCount).toBe(1);
     expect(agent2TickedCount).toBe(1);
 
@@ -58,5 +68,27 @@ describe("Station", () => {
     station.tick();
     expect(agent1TickedCount).toBe(2);
     expect(agent2TickedCount).toBe(1);
+  });
+
+  it("should add a new agent if there is demand and an available facility", () => {
+    const recipe: RecipeDef = {
+      displayName: "Test Recipe",
+      inputs: new Map([["food", 1]]),
+      outputs: new Map([["steel", 2]]),
+    };
+    recipes = [recipe];
+
+    // Create a station with an empty facility and the recipe
+    station = new Station(market, [], recipes, 1);
+    expect(station.facilities.length).toBe(1);
+    expect(station.facilities[0].agent).toBeUndefined();
+
+    // Tick the station to trigger agent addition
+    station.tick();
+
+    // Check if a new agent was added to the facility
+    expect(station.facilities.length).toBe(1);
+    expect(station.facilities[0].agent).toBeDefined();
+    expect(station.facilities[0].agent).toBeInstanceOf(Agent);
   });
 });

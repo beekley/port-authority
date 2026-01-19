@@ -1,8 +1,30 @@
-import { Price, Quantity, ResourceID, Transaction } from "./types";
+import { Price, Quantity, RecipeDef, ResourceID, Transaction } from "./types";
 
 const PRICE_INCREASE_FRACTION = 0.1;
 
 export type GlobalMarket = Map<ResourceID, ResourceMarket>;
+
+export function profitability(market: GlobalMarket, recipe: RecipeDef): number {
+  let costs = 0;
+  for (const [resourceId, inputQuantity] of recipe.inputs) {
+    const resourceMarket = market.get(resourceId);
+    if (!resourceMarket) {
+      throw new Error(`Could not find market for ${resourceId}`);
+    }
+    costs += inputQuantity * resourceMarket.price;
+  }
+
+  let revenue = 0;
+  for (const [resourceId, outputQuantity] of recipe.outputs) {
+    const resourceMarket = market.get(resourceId);
+    if (!resourceMarket) {
+      throw new Error(`Could not find market for ${resourceId}`);
+    }
+    revenue += outputQuantity * resourceMarket.price;
+  }
+
+  return revenue - costs;
+}
 
 // Sets the current price for a resource
 export class ResourceMarket {

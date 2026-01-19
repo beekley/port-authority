@@ -1,7 +1,8 @@
 // @ts-nocheck
 import { describe, it, expect, beforeEach } from "vitest";
-import { ResourceID } from "./types";
+import { ResourceID, RecipeDef } from "./types";
 import { ResourceMarket } from "./market";
+import { profitability } from "./market";
 
 describe("ResourceMarket", () => {
   let market: ResourceMarket;
@@ -53,5 +54,24 @@ describe("ResourceMarket", () => {
     market.buyFromMarket(50);
     market.tick();
     expect(market.price).toBe(initialPrice);
+  });
+});
+
+describe("profitability", () => {
+  it("should calculate profitability correctly", () => {
+    const market = new Map();
+    const foodMarket = new ResourceMarket("food", 10);
+    const steelMarket = new ResourceMarket("steel", 20);
+    market.set("food", foodMarket);
+    market.set("steel", steelMarket);
+
+    const recipe: RecipeDef = {
+      displayName: "Test Recipe",
+      inputs: new Map([["food", 2]]),
+      outputs: new Map([["steel", 2]]),
+    };
+
+    const profit = profitability(market, recipe);
+    expect(profit).toBe(20); // 2*20 - 2*10 = 20
   });
 });

@@ -1,17 +1,9 @@
 import { GlobalMarket } from "./market";
-import { Price, Quantity, ResourceID, Transaction } from "./types";
+import { Price, Quantity, RecipeDef, ResourceID, Transaction } from "./types";
 
 const MAX_TICKS_WITHOUT_PRODUCTION = 5;
 
 export type State = "producing" | "insufficient production";
-
-export interface RecipeDef {
-  displayName: string;
-  // processTimeTicks: number; TODO
-  // Quantity per resource
-  inputs: Map<ResourceID, Quantity>;
-  outputs: Map<ResourceID, Quantity>;
-}
 
 // The thing that takes in resources and ouputs resources
 export class Agent {
