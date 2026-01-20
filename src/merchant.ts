@@ -1,4 +1,5 @@
 import { GlobalMarket } from "./market";
+import { merchantDefs } from "./merchant.data";
 import { ResourceID, Quantity, Price, Transaction } from "./types";
 
 // Merchants arrive at port and decide to sell or buy if prices meet their expectations.
@@ -26,9 +27,11 @@ export class Merchant {
 
   public tick() {
     for (const resourceId of this.minSalePrices.keys()) {
+      console.log(`Merchant selling ${resourceId}`);
       this.sell(resourceId);
     }
     for (const resourceId of this.maxBuyPrices.keys()) {
+      console.log(`Merchant buying ${resourceId}`);
       this.buy(resourceId);
     }
   }

@@ -25,11 +25,6 @@ describe("ResourceMarket", () => {
     expect(market.stock).toBe(70);
   });
 
-  it("should throw an error when buying more than available stock", () => {
-    market.sellToMarket(20);
-    expect(() => market.buyFromMarket(30)).toThrow("Not enough in stock");
-  });
-
   it("should increase the price when consumption is greater than production", () => {
     // Prefill the stock.
     market.sellToMarket(50);

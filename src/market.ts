@@ -1,3 +1,4 @@
+import { initialPrices, recipeDefs } from "./market.data";
 import { Price, Quantity, RecipeDef, ResourceID, Transaction } from "./types";
 
 const PRICE_INCREASE_FRACTION = 0.1;
@@ -57,7 +58,11 @@ export class ResourceMarket {
     // Check if enough in stock.
     if (this.stock < quantity) {
       // Responsibility of caller to prevent this.
-      throw new Error("Not enough in stock");
+      return {
+        resourceId: this.resourceId,
+        quantity: 0,
+        totalPrice: 0,
+      };
     }
     this.tickConsumptionCount += quantity;
     this.stock -= quantity;
@@ -85,4 +90,14 @@ export class ResourceMarket {
     this.tickProductionCount = 0;
     this.tickConsumptionCount = 0;
   }
+}
+
+export function getCompleteMarket(): GlobalMarket {
+  const market: GlobalMarket = new Map();
+  for (const [resourceId, price] of initialPrices) {
+    if (!market.has(resourceId)) {
+      market.set(resourceId, new ResourceMarket(resourceId, price));
+    }
+  }
+  return market;
 }

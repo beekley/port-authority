@@ -7,9 +7,9 @@ interface Facility {
 }
 
 export class Station {
-  private readonly market: GlobalMarket;
+  public readonly market: GlobalMarket;
   public readonly facilities: Facility[] = [];
-  private readonly availableRecipes: RecipeDef[];
+  public readonly availableRecipes: RecipeDef[];
 
   constructor(
     market: GlobalMarket,
