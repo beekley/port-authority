@@ -16,12 +16,11 @@ describe("Agent", () => {
   };
 
   beforeEach(() => {
-    foodMarket = new ResourceMarket("food", 10);
-    steelMarket = new ResourceMarket("steel", 10);
-    market = new Map([
-      ["food", foodMarket],
-      ["steel", steelMarket],
-    ]);
+    market = new GlobalMarket();
+    foodMarket = new ResourceMarket("food", 10, market);
+    steelMarket = new ResourceMarket("steel", 10, market);
+    market.resourceMarkets.set("food", foodMarket);
+    market.resourceMarkets.set("steel", steelMarket);
     agent = new Agent(100, recipe, market);
   });
 
@@ -30,6 +29,7 @@ describe("Agent", () => {
 
     agent.tick();
 
+    console.log(agent);
     expect(agent.wealth).toBe(90); // 100 - 1*10
     expect(foodMarket.stock).toBe(0); // Agent bought the 1 food
   });

@@ -7,13 +7,16 @@ import { Station } from "./station";
 import { MerchantDef, RecipeDef } from "./types";
 import { getSeededRandom, Logger } from "./util";
 
+// TODOs:
+// - player can set tarrifs / subsidies
+// - player can set max import quantity
 export class Game extends Logger {
   public readonly station: Station;
   private tickCount = 0;
   private readonly seed: number;
 
   constructor(seed: number) {
-    super(false);
+    super(true);
     this.seed = seed;
 
     const market: GlobalMarket = getCompleteMarket();
@@ -53,11 +56,15 @@ export class Game extends Logger {
   }
 
   private print() {
-    this.log(`Tick ${this.tickCount} summary:`);
+    this.log(`\n~~ Tick ${this.tickCount} summary ~~`);
     this.log(` Market:`);
-    for (const [resourceId, market] of this.station.market.entries()) {
+    this.log(`  - Wealth: ${this.station.market.wealth.toFixed(2)}`);
+    for (const [
+      resourceId,
+      market,
+    ] of this.station.market.resourceMarkets.entries()) {
       this.log(
-        `  - [${market.id}] ${resourceId}: ${market.stock} in stock, ${market.price.toFixed(2)} per unit`,
+        `  - [${market.id}] ${resourceId}: ${market.stock.toFixed(0)} in stock, ${market.price.toFixed(2)} per unit`,
       );
     }
     this.log(` Agents:`);

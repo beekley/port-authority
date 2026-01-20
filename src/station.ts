@@ -44,7 +44,7 @@ export class Station extends Logger {
     }
 
     // Update Market prices
-    for (const market of this.market.values()) {
+    for (const market of this.market.resourceMarkets.values()) {
       market.tick();
     }
 

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { describe, it, expect, beforeEach } from "vitest";
 import { ResourceID, RecipeDef } from "./types";
-import { ResourceMarket } from "./market";
+import { GlobalMarket, ResourceMarket } from "./market";
 import { profitability } from "./market";
 
 describe("ResourceMarket", () => {
@@ -54,11 +54,14 @@ describe("ResourceMarket", () => {
 
 describe("profitability", () => {
   it("should calculate profitability correctly", () => {
-    const market = new Map();
+    const market: GlobalMarket = {
+      resourceMarkets: new Map(),
+      wealth: 0,
+    };
     const foodMarket = new ResourceMarket("food", 10);
     const steelMarket = new ResourceMarket("steel", 20);
-    market.set("food", foodMarket);
-    market.set("steel", steelMarket);
+    market.resourceMarkets.set("food", foodMarket);
+    market.resourceMarkets.set("steel", steelMarket);
 
     const recipe: RecipeDef = {
       displayName: "Test Recipe",

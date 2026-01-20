@@ -4,12 +4,15 @@ import { Logger } from "./util";
 
 const PRICE_INCREASE_FRACTION = 0.2;
 
-export type GlobalMarket = Map<ResourceID, ResourceMarket>;
+export class GlobalMarket {
+  resourceMarkets: Map<ResourceID, ResourceMarket> = new Map();
+  wealth: Price = 100;
+}
 
 export function profitability(market: GlobalMarket, recipe: RecipeDef): number {
   let costs = 0;
   for (const [resourceId, inputQuantity] of recipe.inputs) {
-    const resourceMarket = market.get(resourceId);
+    const resourceMarket = market.resourceMarkets.get(resourceId);
     if (!resourceMarket) {
       throw new Error(`Could not find market for ${resourceId}`);
     }
@@ -18,7 +21,7 @@ export function profitability(market: GlobalMarket, recipe: RecipeDef): number {
 
   let revenue = 0;
   for (const [resourceId, outputQuantity] of recipe.outputs) {
-    const resourceMarket = market.get(resourceId);
+    const resourceMarket = market.resourceMarkets.get(resourceId);
     if (!resourceMarket) {
       throw new Error(`Could not find market for ${resourceId}`);
     }
@@ -34,25 +37,37 @@ export class ResourceMarket extends Logger {
   public stock: Quantity = 0;
   public price: Price; // Do not set except within this class
 
+  private globalMarket: GlobalMarket;
   // How many of the resource were produced (and sold) to the market.
-  // Includes imports?
   private tickProductionCount: Quantity = 0;
   // How many of the resource were consumed (and bought) from the market.
   private tickConsumptionCount: Quantity = 0;
 
-  constructor(resourceId: ResourceID, initialPrice: Price) {
+  constructor(
+    resourceId: ResourceID,
+    initialPrice: Price,
+    market: GlobalMarket,
+  ) {
     super();
     this.resourceId = resourceId;
     this.price = initialPrice;
+    this.globalMarket = market;
   }
 
   public sellToMarket(quantity: Quantity): Transaction {
-    this.tickProductionCount += quantity;
-    this.stock += quantity;
+    // Sell to the market as much as the global market can afford.
+    const quantityToSell = Math.min(
+      quantity,
+      this.globalMarket.wealth / this.price,
+    );
+    const totalPrice = this.price * quantityToSell;
+    this.globalMarket.wealth -= totalPrice;
+    this.tickProductionCount += quantityToSell;
+    this.stock += quantityToSell;
     return {
       resourceId: this.resourceId,
-      quantity,
-      totalPrice: this.price * quantity,
+      quantity: quantityToSell,
+      totalPrice,
     };
   }
 
@@ -68,6 +83,7 @@ export class ResourceMarket extends Logger {
     }
     this.tickConsumptionCount += quantity;
     this.stock -= quantity;
+    this.globalMarket.wealth += this.price * quantity;
     return {
       resourceId: this.resourceId,
       quantity,
@@ -97,10 +113,13 @@ export class ResourceMarket extends Logger {
 }
 
 export function getCompleteMarket(): GlobalMarket {
-  const market: GlobalMarket = new Map();
+  const market = new GlobalMarket();
   for (const [resourceId, price] of initialPrices) {
-    if (!market.has(resourceId)) {
-      market.set(resourceId, new ResourceMarket(resourceId, price));
+    if (!market.resourceMarkets.has(resourceId)) {
+      market.resourceMarkets.set(
+        resourceId,
+        new ResourceMarket(resourceId, price, market),
+      );
     }
   }
   return market;

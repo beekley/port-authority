@@ -38,7 +38,7 @@ export class Merchant extends Logger {
   }
 
   private sell(resourceId: ResourceID): Transaction {
-    const market = this.market.get(resourceId);
+    const market = this.market.resourceMarkets.get(resourceId);
     if (!market) {
       throw new Error(`Merchant could not sell ${resourceId}: no market`);
     }
@@ -63,7 +63,7 @@ export class Merchant extends Logger {
   }
 
   private buy(resourceId: ResourceID): Transaction {
-    const market = this.market.get(resourceId);
+    const market = this.market.resourceMarkets.get(resourceId);
     if (!market) {
       throw new Error(`Merchant could not buy ${resourceId}: no market`);
     }

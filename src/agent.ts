@@ -57,7 +57,7 @@ export class Agent extends Logger {
     let soldQuantity = 0;
     for (const [resourceId, _] of this.recipe.outputs) {
       const storedQuantity = this.storage.get(resourceId) || 0;
-      const market = this.market.get(resourceId);
+      const market = this.market.resourceMarkets.get(resourceId);
       if (!market) {
         this.log(`Agent could not sell ${resourceId}: no market`);
         continue;
@@ -107,7 +107,7 @@ export class Agent extends Logger {
   }
 
   private buyResource(resourceId: ResourceID, quantity: number): Transaction {
-    const resourceMarket = this.market.get(resourceId);
+    const resourceMarket = this.market.resourceMarkets.get(resourceId);
     if (!resourceMarket) {
       this.log(`Agent could not buy ${quantity} ${resourceId}: no market`);
       return { resourceId, quantity: 0, totalPrice: 0 };
@@ -137,7 +137,7 @@ export class Agent extends Logger {
     // Sell everything.
     for (const [resourceId, _] of this.storage.entries()) {
       const storedQuantity = this.storage.get(resourceId) || 0;
-      const market = this.market.get(resourceId);
+      const market = this.market.resourceMarkets.get(resourceId);
       if (!market) {
         this.log(`Agent could not sell ${resourceId}: no market`);
         continue;

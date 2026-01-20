@@ -11,16 +11,22 @@ describe("Station", () => {
   let steelMarket: ResourceMarket;
   let agents: Agent[];
   let recipes: RecipeDef[];
+  let recipe: RecipeDef;
 
   beforeEach(() => {
-    foodMarket = new ResourceMarket("food", 10);
-    steelMarket = new ResourceMarket("steel", 20);
-    market = new Map([
-      ["food", foodMarket],
-      ["steel", steelMarket],
-    ]);
+    market = new GlobalMarket();
+    foodMarket = new ResourceMarket("food", 10, market);
+    steelMarket = new ResourceMarket("steel", 20, market);
+    market.resourceMarkets.set("food", foodMarket);
+    market.resourceMarkets.set("steel", steelMarket);
     agents = [];
     station = new Station(market, agents, []);
+
+    recipe = {
+      displayName: "Test Recipe",
+      inputs: new Map([["food", 1]]),
+      outputs: new Map([["steel", 2]]),
+    };
   });
 
   it("should tick the agents and markets", () => {
@@ -29,7 +35,7 @@ describe("Station", () => {
     foodMarket.tick = () => marketTickedCount++;
 
     let agentTickedCount = 0;
-    const mockAgent = new Agent(100, [], market);
+    const mockAgent = new Agent(100, recipe, market);
     mockAgent.tick = () => agentTickedCount++;
 
     station = new Station(market, [mockAgent], []);
@@ -45,8 +51,8 @@ describe("Station", () => {
   });
 
   it("should evict agents with 'insufficient production' state", () => {
-    const mockAgent1 = new Agent(100, [], market);
-    const mockAgent2 = new Agent(0, [], market);
+    const mockAgent1 = new Agent(100, recipe, market);
+    const mockAgent2 = new Agent(0, recipe, market);
 
     let agent1TickedCount = 0;
     mockAgent1.tick = () => agent1TickedCount++;
@@ -71,11 +77,6 @@ describe("Station", () => {
   });
 
   it("should add a new agent if there is demand and an available facility", () => {
-    const recipe: RecipeDef = {
-      displayName: "Test Recipe",
-      inputs: new Map([["food", 1]]),
-      outputs: new Map([["steel", 2]]),
-    };
     recipes = [recipe];
 
     // Create a station with an empty facility and the recipe

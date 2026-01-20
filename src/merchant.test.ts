@@ -11,12 +11,12 @@ describe("Merchant", () => {
 
   beforeEach(() => {
     // Prefill market.
-    market = new Map();
-    foodMarket = new ResourceMarket("food", 15);
-    waterMarket = new ResourceMarket("water", 5);
-    market.set("food", foodMarket);
+    market = new GlobalMarket();
+    foodMarket = new ResourceMarket("food", 15, market);
+    waterMarket = new ResourceMarket("water", 5, market);
+    market.resourceMarkets.set("food", foodMarket);
     foodMarket.sellToMarket(10);
-    market.set("water", waterMarket);
+    market.resourceMarkets.set("water", waterMarket);
     waterMarket.sellToMarket(10);
   });
 
