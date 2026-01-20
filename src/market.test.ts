@@ -10,7 +10,9 @@ describe("ResourceMarket", () => {
   const initialPrice = 100;
 
   beforeEach(() => {
-    market = new ResourceMarket(resourceId, initialPrice);
+    const globalMarket = new GlobalMarket();
+    globalMarket.wealth = 10000; // Plenty
+    market = new ResourceMarket(resourceId, initialPrice, globalMarket);
   });
 
   it("should initialize with correct values", () => {

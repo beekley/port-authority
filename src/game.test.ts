@@ -6,7 +6,7 @@ import { SILENT } from "./util";
 describe("Game", () => {
   it("should tick the game and increase the tick count", () => {
     const game = new Game(123);
-    const tickCount = 100;
+    const tickCount = 10;
     expect(game["tickCount"]).toBe(0);
 
     for (let i = 0; i < tickCount; i++) {

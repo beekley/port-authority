@@ -12,6 +12,7 @@ describe("Merchant", () => {
   beforeEach(() => {
     // Prefill market.
     market = new GlobalMarket();
+    market.wealth = 10000; // Plenty
     foodMarket = new ResourceMarket("food", 15, market);
     waterMarket = new ResourceMarket("water", 5, market);
     market.resourceMarkets.set("food", foodMarket);
