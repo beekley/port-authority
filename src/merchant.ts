@@ -55,7 +55,7 @@ export class Merchant extends Logger {
       this.wealth += transaction.totalPrice;
       this.cargo.set(resourceId, cargoQuantity - transaction.quantity);
       this.log(
-        `Merchant sold ${transaction.quantity} ${resourceId} for ${transaction.totalPrice}`,
+        `Merchant sold ${transaction.quantity} ${resourceId} for ${transaction.totalPrice.toFixed(2)}`,
       );
       return transaction;
     }
@@ -85,7 +85,7 @@ export class Merchant extends Logger {
       this.wealth -= transaction.totalPrice;
       this.cargo.set(resourceId, cargoQuantity + transaction.quantity);
       this.log(
-        `Merchant bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice}`,
+        `Merchant bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice.toFixed(2)}`,
       );
       return transaction;
     }

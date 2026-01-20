@@ -86,7 +86,9 @@ export class ResourceMarket extends Logger {
       this.price *= 1 - PRICE_INCREASE_FRACTION;
     }
 
-    this.log(`Price for ${this.resourceId}: ${oldPrice} -> ${this.price}.`);
+    this.log(
+      `Price for ${this.resourceId}: ${oldPrice.toFixed(2)} -> ${this.price.toFixed(2)}.`,
+    );
 
     // Reset tick.
     this.tickProductionCount = 0;

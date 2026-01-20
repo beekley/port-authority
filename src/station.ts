@@ -52,7 +52,8 @@ export class Station extends Logger {
       // Add new agent to meet demand
       if (!facility.agent) {
         this.addAgent(facility);
-        continue;
+        // Only one at a time
+        break;
       }
 
       // Remove agent that isn't producing.

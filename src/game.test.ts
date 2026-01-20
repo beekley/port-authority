@@ -9,10 +9,9 @@ describe("Game", () => {
     game.tick();
     expect(game["tickCount"]).toBe(1);
 
-    game.tick();
-    expect(game["tickCount"]).toBe(2);
-
-    game.tick();
-    expect(game["tickCount"]).toBe(3);
+    for (let i = 0; i < 10; i++) {
+      game.tick();
+    }
+    expect(game["tickCount"]).toBe(11);
   });
 });

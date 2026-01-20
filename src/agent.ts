@@ -124,7 +124,7 @@ export class Agent extends Logger {
       const transaction = resourceMarket.buyFromMarket(quantity);
       this.wealth -= transaction.totalPrice;
       this.log(
-        `Agent bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice} (full order)`,
+        `Agent bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice.toFixed(2)} (full order)`,
       );
       return transaction;
     }
@@ -133,7 +133,7 @@ export class Agent extends Logger {
     const transaction = resourceMarket.buyFromMarket(affordableQuantity);
     this.wealth -= transaction.totalPrice;
     this.log(
-      `Agent bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice} (partial order ${transaction.quantity} / ${quantity})`,
+      `Agent bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice.toFixed(2)} (partial order ${transaction.quantity} / ${quantity})`,
     );
     return transaction;
   }

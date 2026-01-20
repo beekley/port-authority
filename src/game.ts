@@ -56,14 +56,14 @@ export class Game {
     console.log(` Market:`);
     for (const [resourceId, market] of this.station.market.entries()) {
       console.log(
-        `  - ${resourceId}: ${market.stock} in stock, ${market.price} per unit`,
+        `  - ${resourceId}: ${market.stock} in stock, ${market.price.toFixed(2)} per unit`,
       );
     }
     console.log(` Agents:`);
     for (const facility of this.station.facilities) {
       if (facility.agent) {
         console.log(
-          `  - ${facility.agent.wealth} wealth, ${facility.agent.state}`,
+          `  - ${facility.agent.wealth.toFixed(2)} wealth, ${facility.agent.state}`,
         );
       } else {
         console.log(`  - No agent`);
@@ -72,7 +72,7 @@ export class Game {
     console.log(` Recipes:`);
     for (const recipe of this.station.availableRecipes) {
       console.log(
-        `  - ${recipe.displayName}: ${profitability(this.station.market, recipe)} profit`,
+        `  - ${recipe.displayName}: ${profitability(this.station.market, recipe).toFixed(2)} profit`,
       );
     }
   }
