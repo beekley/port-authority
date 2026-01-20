@@ -1,3 +1,7 @@
+import { env } from "process";
+
+export const SILENT = "silent";
+
 export function getSeededRandom<T>(
   seed: number,
   tickCount: number,
@@ -9,12 +13,18 @@ export function getSeededRandom<T>(
 
 export class Logger {
   public readonly id: string;
+  private noPrefix: boolean;
 
-  constructor() {
+  constructor(noPrefix: boolean = false) {
     this.id = crypto.randomUUID().split("-").pop() || "";
+    this.noPrefix = noPrefix;
   }
 
   log(message: string) {
-    console.log(`[${this.constructor.name} - ${this.id}] ${message}`);
+    if (env.LOGGING === SILENT) return;
+
+    const prefix = `[${this.constructor.name} - ${this.id}]`;
+    if (this.noPrefix) return console.log(message);
+    console.log(`${prefix} ${message}`);
   }
 }

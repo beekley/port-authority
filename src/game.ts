@@ -5,14 +5,15 @@ import { Merchant } from "./merchant";
 import { merchantDefs } from "./merchant.data";
 import { Station } from "./station";
 import { MerchantDef, RecipeDef } from "./types";
-import { getSeededRandom } from "./util";
+import { getSeededRandom, Logger } from "./util";
 
-export class Game {
+export class Game extends Logger {
   public readonly station: Station;
   private tickCount = 0;
   private readonly seed: number;
 
   constructor(seed: number) {
+    super(false);
     this.seed = seed;
 
     const market: GlobalMarket = getCompleteMarket();
@@ -22,7 +23,7 @@ export class Game {
   }
 
   public tick() {
-    console.log(`Tick ${this.tickCount}`);
+    this.log(`Tick ${this.tickCount}`);
 
     // Create visiting merchants.
     const visitingMerchant = this.getRandomMerchant();
@@ -52,27 +53,27 @@ export class Game {
   }
 
   private print() {
-    console.log(`Tick ${this.tickCount} summary:`);
-    console.log(` Market:`);
+    this.log(`Tick ${this.tickCount} summary:`);
+    this.log(` Market:`);
     for (const [resourceId, market] of this.station.market.entries()) {
-      console.log(
+      this.log(
         `  - [${market.id}] ${resourceId}: ${market.stock} in stock, ${market.price.toFixed(2)} per unit`,
       );
     }
-    console.log(` Agents:`);
+    this.log(` Agents:`);
     for (const facility of this.station.facilities) {
       if (facility.agent) {
         const agent = facility.agent;
-        console.log(
+        this.log(
           `  - [${agent.id}] ${agent.recipe.displayName} with ${agent.wealth.toFixed(2)} wealth, ${agent.state}`,
         );
       } else {
-        console.log(`  - No agent`);
+        this.log(`  - No agent`);
       }
     }
-    console.log(` Recipes:`);
+    this.log(` Recipes:`);
     for (const recipe of this.station.availableRecipes) {
-      console.log(
+      this.log(
         `  - ${recipe.displayName}: ${profitability(this.station.market, recipe).toFixed(2)} profit`,
       );
     }
