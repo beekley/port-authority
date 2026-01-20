@@ -1,5 +1,6 @@
 import { initialPrices, recipeDefs } from "./market.data";
 import { Price, Quantity, RecipeDef, ResourceID, Transaction } from "./types";
+import { Logger } from "./util";
 
 const PRICE_INCREASE_FRACTION = 0.1;
 
@@ -28,7 +29,7 @@ export function profitability(market: GlobalMarket, recipe: RecipeDef): number {
 }
 
 // Sets the current price for a resource
-export class ResourceMarket {
+export class ResourceMarket extends Logger {
   public readonly resourceId: ResourceID;
   public stock: Quantity = 0;
   public price: Price; // Do not set except within this class
@@ -40,6 +41,7 @@ export class ResourceMarket {
   private tickConsumptionCount: Quantity = 0;
 
   constructor(resourceId: ResourceID, initialPrice: Price) {
+    super();
     this.resourceId = resourceId;
     this.price = initialPrice;
   }
@@ -84,7 +86,7 @@ export class ResourceMarket {
       this.price *= 1 - PRICE_INCREASE_FRACTION;
     }
 
-    console.log(`Price for ${this.resourceId}: ${oldPrice} -> ${this.price}.`);
+    this.log(`Price for ${this.resourceId}: ${oldPrice} -> ${this.price}.`);
 
     // Reset tick.
     this.tickProductionCount = 0;

@@ -1,12 +1,13 @@
 import { Agent } from "./agent";
 import { GlobalMarket, profitability } from "./market";
 import { RecipeDef } from "./types";
+import { Logger } from "./util";
 
 interface Facility {
   agent?: Agent;
 }
 
-export class Station {
+export class Station extends Logger {
   public readonly market: GlobalMarket;
   public readonly facilities: Facility[] = [];
   public readonly availableRecipes: RecipeDef[];
@@ -17,6 +18,7 @@ export class Station {
     recipes: RecipeDef[],
     size = agents.length,
   ) {
+    super();
     // Starting values for test / debug.
     this.market = market;
 

@@ -1,9 +1,9 @@
 import { GlobalMarket } from "./market";
-import { merchantDefs } from "./merchant.data";
 import { ResourceID, Quantity, Price, Transaction } from "./types";
+import { Logger } from "./util";
 
 // Merchants arrive at port and decide to sell or buy if prices meet their expectations.
-export class Merchant {
+export class Merchant extends Logger {
   // TODO: Should probably have an ID.
   public wealth: Price;
   public readonly cargo: Map<ResourceID, Quantity>;
@@ -18,6 +18,7 @@ export class Merchant {
     maxBuyPrices: [ResourceID, Quantity][],
     market: GlobalMarket,
   ) {
+    super();
     this.wealth = initialWealth;
     this.market = market;
     this.cargo = new Map(cargo);
@@ -27,11 +28,11 @@ export class Merchant {
 
   public tick() {
     for (const resourceId of this.minSalePrices.keys()) {
-      console.log(`Merchant selling ${resourceId}`);
+      this.log(`Merchant selling ${resourceId}`);
       this.sell(resourceId);
     }
     for (const resourceId of this.maxBuyPrices.keys()) {
-      console.log(`Merchant buying ${resourceId}`);
+      this.log(`Merchant buying ${resourceId}`);
       this.buy(resourceId);
     }
   }
@@ -53,7 +54,7 @@ export class Merchant {
       const transaction = market.sellToMarket(cargoQuantity);
       this.wealth += transaction.totalPrice;
       this.cargo.set(resourceId, cargoQuantity - transaction.quantity);
-      console.log(
+      this.log(
         `Merchant sold ${transaction.quantity} ${resourceId} for ${transaction.totalPrice}`,
       );
       return transaction;
@@ -83,7 +84,7 @@ export class Merchant {
       const transaction = market.buyFromMarket(quantity);
       this.wealth -= transaction.totalPrice;
       this.cargo.set(resourceId, cargoQuantity + transaction.quantity);
-      console.log(
+      this.log(
         `Merchant bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice}`,
       );
       return transaction;

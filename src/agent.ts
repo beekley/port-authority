@@ -1,12 +1,13 @@
 import { GlobalMarket } from "./market";
 import { Price, Quantity, RecipeDef, ResourceID, Transaction } from "./types";
+import { Logger } from "./util";
 
 const MAX_TICKS_WITHOUT_PRODUCTION = 5;
 
 export type State = "producing" | "insufficient production";
 
 // The thing that takes in resources and ouputs resources
-export class Agent {
+export class Agent extends Logger {
   // Variables
   public state: State = "producing";
   public wealth: Price;
@@ -22,6 +23,7 @@ export class Agent {
     recipes: RecipeDef[],
     market: GlobalMarket,
   ) {
+    super();
     this.wealth = initialWealth;
     this.recipes.push(...recipes);
     this.market = market;
@@ -62,19 +64,19 @@ export class Agent {
         const storedQuantity = this.storage.get(resourceId) || 0;
         const market = this.market.get(resourceId);
         if (!market) {
-          console.log(`Agent could not sell ${resourceId}: no market`);
+          this.log(`Agent could not sell ${resourceId}: no market`);
           continue;
         }
         const transaction = market.sellToMarket(storedQuantity);
         soldQuantity += transaction.quantity;
         this.storage.set(resourceId, storedQuantity - transaction.quantity);
-        console.log(`Sold ${transaction.quantity} ${resourceId} to market.`);
+        this.log(`Sold ${transaction.quantity} ${resourceId} to market.`);
       }
     }
 
     // Check if there was no production.
     if (maxProductionQuantity === 0 && soldQuantity === 0) {
-      console.log(
+      this.log(
         `No production (${this.ticksWithoutProduction} / ${MAX_TICKS_WITHOUT_PRODUCTION} ticks without production).`,
       );
       this.ticksWithoutProduction++;
@@ -103,7 +105,7 @@ export class Agent {
     for (const [resourceId, outputQuantity] of recipe.outputs) {
       const storedQuantity = this.storage.get(resourceId) || 0;
       this.storage.set(resourceId, storedQuantity + outputQuantity);
-      console.log(
+      this.log(
         `Produced ${outputQuantity} ${resourceId} (${recipe.displayName})`,
       );
     }
@@ -112,7 +114,7 @@ export class Agent {
   private buyResource(resourceId: ResourceID, quantity: number): Transaction {
     const resourceMarket = this.market.get(resourceId);
     if (!resourceMarket) {
-      console.log(`Agent could not buy ${quantity} ${resourceId}: no market`);
+      this.log(`Agent could not buy ${quantity} ${resourceId}: no market`);
       return { resourceId, quantity: 0, totalPrice: 0 };
     }
 
@@ -121,7 +123,7 @@ export class Agent {
     if (totalCost < this.wealth) {
       const transaction = resourceMarket.buyFromMarket(quantity);
       this.wealth -= transaction.totalPrice;
-      console.log(
+      this.log(
         `Agent bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice} (full order)`,
       );
       return transaction;
@@ -130,7 +132,7 @@ export class Agent {
     const affordableQuantity = Math.floor(this.wealth / resourceMarket.price);
     const transaction = resourceMarket.buyFromMarket(affordableQuantity);
     this.wealth -= transaction.totalPrice;
-    console.log(
+    this.log(
       `Agent bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice} (partial order ${transaction.quantity} / ${quantity})`,
     );
     return transaction;
@@ -142,11 +144,11 @@ export class Agent {
       const storedQuantity = this.storage.get(resourceId) || 0;
       const market = this.market.get(resourceId);
       if (!market) {
-        console.log(`Agent could not sell ${resourceId}: no market`);
+        this.log(`Agent could not sell ${resourceId}: no market`);
         continue;
       }
       const transaction = market.sellToMarket(storedQuantity);
     }
-    console.log(`Agent ready for eviction`);
+    this.log(`Agent ready for eviction`);
   }
 }
