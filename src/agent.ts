@@ -15,66 +15,61 @@ export class Agent extends Logger {
   private ticksWithoutProduction: number = 0;
 
   // Constants
-  private readonly recipes: RecipeDef[] = [];
+  public readonly recipe: RecipeDef;
   private readonly market: GlobalMarket;
 
   constructor(
     initialWealth: Price,
-    recipes: RecipeDef[],
+    productionRecipe: RecipeDef,
     market: GlobalMarket,
   ) {
     super();
     this.wealth = initialWealth;
-    this.recipes.push(...recipes);
+    this.recipe = productionRecipe;
     this.market = market;
   }
 
   public tick() {
-    // Try to store one recipe's worth of resources.
-    for (const recipe of this.recipes) {
-      for (const [resourceId, inputQuantity] of recipe.inputs) {
-        const storedQuantity = this.storage.get(resourceId) || 0;
-        const neededQuantity = inputQuantity - storedQuantity;
-        if (neededQuantity < 0) continue;
+    const recipe = this.recipe;
+    for (const [resourceId, inputQuantity] of recipe.inputs) {
+      const storedQuantity = this.storage.get(resourceId) || 0;
+      const neededQuantity = inputQuantity - storedQuantity;
+      if (neededQuantity < 0) continue;
 
-        const transaction = this.buyResource(resourceId, neededQuantity);
-        this.storage.set(resourceId, storedQuantity + transaction.quantity);
-      }
+      const transaction = this.buyResource(resourceId, neededQuantity);
+      this.storage.set(resourceId, storedQuantity + transaction.quantity);
     }
 
     // Produce with as many resources as are stored.
     let maxProductionQuantity: Quantity = 0;
-    for (const recipe of this.recipes) {
-      for (const [resourceId, inputQuantity] of recipe.inputs) {
-        const storedQuantity = this.storage.get(resourceId) || 0;
-        maxProductionQuantity = Math.max(
-          maxProductionQuantity,
-          Math.floor(storedQuantity / inputQuantity),
-        );
-      }
-      for (let i = 0; i < maxProductionQuantity; i++) {
-        this.produceOne(recipe);
-      }
+    for (const [resourceId, inputQuantity] of this.recipe.inputs) {
+      const storedQuantity = this.storage.get(resourceId) || 0;
+      maxProductionQuantity = Math.max(
+        maxProductionQuantity,
+        Math.floor(storedQuantity / inputQuantity),
+      );
+    }
+    for (let i = 0; i < maxProductionQuantity; i++) {
+      this.produceOne(this.recipe);
     }
 
     // Sell all outputs to market.
     let soldQuantity = 0;
-    for (const recipe of this.recipes) {
-      for (const [resourceId, _] of recipe.outputs) {
-        const storedQuantity = this.storage.get(resourceId) || 0;
-        const market = this.market.get(resourceId);
-        if (!market) {
-          this.log(`Agent could not sell ${resourceId}: no market`);
-          continue;
-        }
-        const transaction = market.sellToMarket(storedQuantity);
-        soldQuantity += transaction.quantity;
-        this.storage.set(resourceId, storedQuantity - transaction.quantity);
-        this.log(`Sold ${transaction.quantity} ${resourceId} to market.`);
+    for (const [resourceId, _] of this.recipe.outputs) {
+      const storedQuantity = this.storage.get(resourceId) || 0;
+      const market = this.market.get(resourceId);
+      if (!market) {
+        this.log(`Agent could not sell ${resourceId}: no market`);
+        continue;
       }
+      const transaction = market.sellToMarket(storedQuantity);
+      soldQuantity += transaction.quantity;
+      this.storage.set(resourceId, storedQuantity - transaction.quantity);
+      this.log(`Sold ${transaction.quantity} ${resourceId} to market.`);
     }
 
     // Check if there was no production.
+
     if (maxProductionQuantity === 0 && soldQuantity === 0) {
       this.log(
         `No production (${this.ticksWithoutProduction} / ${MAX_TICKS_WITHOUT_PRODUCTION} ticks without production).`,

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { Agent, RecipeDef } from "./agent";
+import { Agent } from "./agent";
 import { GlobalMarket, ResourceMarket } from "./market";
-import { ResourceID, Quantity } from "./types";
+import { ResourceID, Quantity, RecipeDef } from "./types";
 
 describe("Agent", () => {
   let agent: Agent;
@@ -9,13 +9,11 @@ describe("Agent", () => {
   let foodMarket: ResourceMarket;
   let steelMarket: ResourceMarket;
 
-  const recipes: RecipeDef[] = [
-    {
-      displayName: "Burger",
-      inputs: new Map<ResourceID, Quantity>([["food", 1]]),
-      outputs: new Map<ResourceID, Quantity>([["steel", 2]]),
-    },
-  ];
+  const recipe = {
+    displayName: "Burger",
+    inputs: new Map<ResourceID, Quantity>([["food", 1]]),
+    outputs: new Map<ResourceID, Quantity>([["steel", 2]]),
+  };
 
   beforeEach(() => {
     foodMarket = new ResourceMarket("food", 10);
@@ -24,7 +22,7 @@ describe("Agent", () => {
       ["food", foodMarket],
       ["steel", steelMarket],
     ]);
-    agent = new Agent(100, recipes, market);
+    agent = new Agent(100, recipe, market);
   });
 
   it("should buy needed resources for a recipe", () => {

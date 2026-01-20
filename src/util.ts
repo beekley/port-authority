@@ -8,7 +8,7 @@ export function getSeededRandom<T>(
 }
 
 export class Logger {
-  private readonly id: string;
+  public readonly id: string;
 
   constructor() {
     this.id = crypto.randomUUID().split("-").pop() || "";

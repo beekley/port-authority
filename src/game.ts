@@ -56,14 +56,15 @@ export class Game {
     console.log(` Market:`);
     for (const [resourceId, market] of this.station.market.entries()) {
       console.log(
-        `  - ${resourceId}: ${market.stock} in stock, ${market.price.toFixed(2)} per unit`,
+        `  - [${market.id}] ${resourceId}: ${market.stock} in stock, ${market.price.toFixed(2)} per unit`,
       );
     }
     console.log(` Agents:`);
     for (const facility of this.station.facilities) {
       if (facility.agent) {
+        const agent = facility.agent;
         console.log(
-          `  - ${facility.agent.wealth.toFixed(2)} wealth, ${facility.agent.state}`,
+          `  - [${agent.id}] ${agent.recipe.displayName} with ${agent.wealth.toFixed(2)} wealth, ${agent.state}`,
         );
       } else {
         console.log(`  - No agent`);

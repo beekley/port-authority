@@ -76,7 +76,7 @@ export class Station extends Logger {
       }
     }
     if (mostProfitableRecipe) {
-      facility.agent = new Agent(100, [mostProfitableRecipe], this.market);
+      facility.agent = new Agent(100, mostProfitableRecipe, this.market);
     }
   }
 

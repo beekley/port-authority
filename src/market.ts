@@ -2,7 +2,7 @@ import { initialPrices, recipeDefs } from "./market.data";
 import { Price, Quantity, RecipeDef, ResourceID, Transaction } from "./types";
 import { Logger } from "./util";
 
-const PRICE_INCREASE_FRACTION = 0.1;
+const PRICE_INCREASE_FRACTION = 0.2;
 
 export type GlobalMarket = Map<ResourceID, ResourceMarket>;
 
