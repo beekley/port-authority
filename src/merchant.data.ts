@@ -4,8 +4,8 @@ import { MerchantDef } from "./types";
 export const merchantDefs: MerchantDef[] = [
   // Biomass importer
   {
-    initialWealth: 100,
-    cargo: [["biomass", 100]],
+    initialWealth: 30,
+    cargo: [["biomass", 20]],
     minSalePrices: [["biomass", 1]],
     maxBuyPrices: [],
   },

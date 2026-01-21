@@ -26,7 +26,7 @@ export class Game extends Logger {
   }
 
   public tick() {
-    this.log(`Tick ${this.tickCount}`);
+    this.log(`\n~~ Tick ${this.tickCount} ~~`);
 
     // Create visiting merchants.
     const visitingMerchant = this.getRandomMerchant();
@@ -56,7 +56,7 @@ export class Game extends Logger {
   }
 
   private print() {
-    this.log(`\n~~ Tick ${this.tickCount} summary ~~`);
+    this.log(`Tick ${this.tickCount} summary`);
     this.log(` Market:`);
     this.log(`  - Wealth: ${this.station.market.wealth.toFixed(2)}`);
     for (const [

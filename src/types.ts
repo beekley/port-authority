@@ -9,6 +9,7 @@ export type ResourceID =
 
 export type Quantity = number;
 export type Price = number;
+export type Fraction = number;
 
 export interface Transaction {
   resourceId: ResourceID;

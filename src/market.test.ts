@@ -52,6 +52,41 @@ describe("ResourceMarket", () => {
     market.tick();
     expect(market.price).toBe(initialPrice);
   });
+
+  it("should apply tarrifs to import but not local sale prices", () => {
+    // Pre-tarrif.
+    const importTx1 = market.sellToMarket(2, true);
+    expect(importTx1.totalPrice).toBe(2 * initialPrice);
+
+    // Apply tarrif
+    const importModifier = 0.1;
+    market.globalMarket.importModifiers.set(resourceId, importModifier);
+
+    // Post-tarrif
+    const localTx = market.sellToMarket(2);
+    expect(localTx.totalPrice).toBe(2 * initialPrice);
+    const importTx2 = market.sellToMarket(2, true);
+    expect(importTx2.totalPrice).toBe(2 * initialPrice * (1 + importModifier));
+  });
+
+  it("should apply tarrifs to export but not local purchase prices", () => {
+    // Fill market
+    market.sellToMarket(50);
+
+    // Pre-tarrif.
+    const exportTx1 = market.buyFromMarket(2, true);
+    expect(exportTx1.totalPrice).toBe(2 * initialPrice);
+
+    // Apply tarrif
+    const exportModifier = 0.1;
+    market.globalMarket.exportModifiers.set(resourceId, exportModifier);
+
+    // Post-tarrif
+    const localTx = market.buyFromMarket(2);
+    expect(localTx.totalPrice).toBe(2 * initialPrice);
+    const exportTx2 = market.buyFromMarket(2, true);
+    expect(exportTx2.totalPrice).toBe(2 * initialPrice * (1 + exportModifier));
+  });
 });
 
 describe("profitability", () => {

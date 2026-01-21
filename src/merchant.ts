@@ -49,9 +49,11 @@ export class Merchant extends Logger {
         `Merchant could not sell ${resourceId}: no desired sale price`,
       );
     }
-    if (market.price >= minSalePrice) {
+
+    const importUnitPrice = market.importUnitPrice();
+    if (importUnitPrice >= minSalePrice) {
       const cargoQuantity = this.cargo.get(resourceId) || 0;
-      const transaction = market.sellToMarket(cargoQuantity);
+      const transaction = market.sellToMarket(cargoQuantity, true);
       this.wealth += transaction.totalPrice;
       this.cargo.set(resourceId, cargoQuantity - transaction.quantity);
       this.log(
@@ -81,7 +83,7 @@ export class Merchant extends Logger {
       const maxAffordableQuantity = Math.floor(this.wealth / market.price);
       const quantity = Math.min(maxAffordableQuantity, market.stock);
 
-      const transaction = market.buyFromMarket(quantity);
+      const transaction = market.buyFromMarket(quantity, true);
       this.wealth -= transaction.totalPrice;
       this.cargo.set(resourceId, cargoQuantity + transaction.quantity);
       this.log(

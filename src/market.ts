@@ -1,11 +1,22 @@
-import { initialPrices, recipeDefs } from "./market.data";
-import { Price, Quantity, RecipeDef, ResourceID, Transaction } from "./types";
+import { initialPrices } from "./market.data";
+import {
+  Fraction,
+  Price,
+  Quantity,
+  RecipeDef,
+  ResourceID,
+  Transaction,
+} from "./types";
 import { Logger } from "./util";
 
 const PRICE_INCREASE_FRACTION = 0.2;
 
 export class GlobalMarket {
   resourceMarkets: Map<ResourceID, ResourceMarket> = new Map();
+  // Vales >0 subsidize imports by paying importers more than market price.
+  importModifiers: Map<ResourceID, Fraction> = new Map();
+  // Vales <0 subsidize exports by charging exporters less than market price.
+  exportModifiers: Map<ResourceID, Fraction> = new Map();
   wealth: Price = 100;
 }
 
@@ -54,13 +65,17 @@ export class ResourceMarket extends Logger {
     this.globalMarket = market;
   }
 
-  public sellToMarket(quantity: Quantity): Transaction {
+  public sellToMarket(
+    quantity: Quantity,
+    isImport: boolean = false,
+  ): Transaction {
     // Sell to the market as much as the global market can afford.
+    const unitPrice = isImport ? this.importUnitPrice() : this.price;
     const quantityToSell = Math.min(
       quantity,
-      this.globalMarket.wealth / this.price,
+      Math.floor(this.globalMarket.wealth / unitPrice),
     );
-    const totalPrice = this.price * quantityToSell;
+    const totalPrice = unitPrice * quantityToSell;
     this.globalMarket.wealth -= totalPrice;
     this.tickProductionCount += quantityToSell;
     this.stock += quantityToSell;
@@ -71,7 +86,10 @@ export class ResourceMarket extends Logger {
     };
   }
 
-  public buyFromMarket(quantity: Quantity): Transaction {
+  public buyFromMarket(
+    quantity: Quantity,
+    isExport: boolean = false,
+  ): Transaction {
     // Check if enough in stock.
     if (this.stock < quantity) {
       // Responsibility of caller to prevent this.
@@ -81,14 +99,28 @@ export class ResourceMarket extends Logger {
         totalPrice: 0,
       };
     }
+    const unitPrice = isExport ? this.exportUnitPrice() : this.price;
+    const totalPrice = unitPrice * quantity;
     this.tickConsumptionCount += quantity;
     this.stock -= quantity;
-    this.globalMarket.wealth += this.price * quantity;
+    this.globalMarket.wealth += totalPrice;
     return {
       resourceId: this.resourceId,
       quantity,
-      totalPrice: this.price * quantity,
+      totalPrice,
     };
+  }
+
+  public importUnitPrice(): Price {
+    const importModifier =
+      this.globalMarket.importModifiers.get(this.resourceId) || 0;
+    return this.price * (1 + importModifier);
+  }
+
+  public exportUnitPrice(): Price {
+    const exportModifier =
+      this.globalMarket.exportModifiers.get(this.resourceId) || 0;
+    return this.price * (1 + exportModifier);
   }
 
   public tick() {
