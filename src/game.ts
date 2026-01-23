@@ -4,8 +4,29 @@ import { recipeDefs } from "./market.data";
 import { Merchant } from "./merchant";
 import { merchantDefs } from "./merchant.data";
 import { Station } from "./station";
-import { MerchantDef, RecipeDef } from "./types";
+import { Fraction, MerchantDef, Price, Quantity, RecipeDef } from "./types";
 import { getSeededRandom, Logger } from "./util";
+
+export interface GameState {
+  tickCount: number;
+  wealth: Price;
+  resources: Record<
+    string,
+    {
+      count: Quantity;
+      price: Price;
+      modifier: Fraction;
+    }
+  >;
+}
+
+// 2. The Ephemeral Events: Things that happened THIS tick (for the log)
+export interface GameLogEvent {
+  type: "SHIP_ARRIVAL" | "AGENT_EVICTION" | "AGENT_ADDITION";
+  message: string;
+}
+
+export type GameTickListener = (state: GameState, logs: GameLogEvent[]) => void;
 
 // TODOs:
 // - player can set tarrifs / subsidies
@@ -14,6 +35,7 @@ export class Game extends Logger {
   public readonly station: Station;
   private tickCount = 0;
   private readonly seed: number;
+  private subscribers: GameTickListener[] = [];
 
   constructor(seed: number) {
     super(true);
@@ -37,7 +59,39 @@ export class Game extends Logger {
 
     this.print();
 
+    // Notify UIs
+    this.notifyListeners();
+
     this.tickCount++;
+  }
+
+  public subscribe(listener: GameTickListener) {
+    this.subscribers.push(listener);
+  }
+
+  private notifyListeners() {
+    const state: GameState = {
+      tickCount: this.tickCount,
+      wealth: this.station.market.wealth,
+      resources: {},
+    };
+    for (const [
+      resourceId,
+      market,
+    ] of this.station.market.resourceMarkets.entries()) {
+      state.resources[resourceId] = {
+        count: market.stock,
+        price: market.price,
+        modifier: 0,
+      };
+    }
+
+    // Nothing yet.
+    const logs: GameLogEvent[] = [];
+
+    for (const listener of this.subscribers) {
+      listener(state, logs);
+    }
   }
 
   private getRandomMerchant(): Merchant {

@@ -2,12 +2,16 @@ import { env } from "process";
 
 export const SILENT = "silent";
 
+export function getSeed(): number {
+  return Math.floor(Math.random() * 10 * 1000);
+}
+
 export function getSeededRandom<T>(
   seed: number,
   tickCount: number,
   values: T[],
 ): T {
-  const diceroll = tickCount + seed;
+  const diceroll = tickCount * seed;
   return values[diceroll % values.length];
 }
 
