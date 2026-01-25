@@ -27,6 +27,7 @@ export interface RecipeDef {
 
 // TODO: support a range of values.
 export interface MerchantDef {
+  name?: string;
   initialWealth: Price;
   cargo: [ResourceID, Quantity][];
   minSalePrices: [ResourceID, Price][];

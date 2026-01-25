@@ -6,8 +6,6 @@ import { getSeed, SILENT } from "./util";
 
 const MAX_TPS = 1;
 
-// Log our own state.
-env.LOGGING = SILENT;
 const game = new Game(getSeed());
 let tps: "1" | "2" = "1";
 let paused = true;

@@ -44,7 +44,7 @@ export class Game extends Logger {
     const visitingMerchant = this.getRandomMerchant();
     this.addGameEvent({
       type: "SHIP_ARRIVAL",
-      message: `${visitingMerchant.id} arrived with ${visitingMerchant.wealth.toFixed(2)} wealth`,
+      message: `${visitingMerchant.name} arrived with ${visitingMerchant.wealth.toFixed(2)} wealth`,
     });
     visitingMerchant.tick();
 
@@ -101,6 +101,7 @@ export class Game extends Logger {
       merchantDefs,
     );
     return new Merchant(
+      merchantDef.name || `Merchant ${this.tickCount}`,
       merchantDef.initialWealth,
       merchantDef.cargo,
       merchantDef.minSalePrices,

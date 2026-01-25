@@ -4,6 +4,7 @@ import { MerchantDef } from "./types";
 export const merchantDefs: MerchantDef[] = [
   // Biomass importer
   {
+    name: "Biomass Importer",
     initialWealth: 30,
     cargo: [["biomass", 20]],
     minSalePrices: [["biomass", 1]],
@@ -11,6 +12,7 @@ export const merchantDefs: MerchantDef[] = [
   },
   // Plastic exporter
   {
+    name: "Plastic Exporter",
     initialWealth: 50,
     cargo: [],
     minSalePrices: [],
@@ -18,6 +20,7 @@ export const merchantDefs: MerchantDef[] = [
   },
   // Food trader
   {
+    name: "Food Trader",
     initialWealth: 20,
     cargo: [["food", 15]],
     minSalePrices: [["food", 3]],

@@ -53,6 +53,7 @@ describe("Merchant", () => {
     }) => {
       // Create the merchant.
       merchant = new Merchant(
+        "Test Merchant",
         initialWealth,
         cargo,
         minSalePrices,

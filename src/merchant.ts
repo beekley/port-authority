@@ -4,7 +4,7 @@ import { Logger } from "./util";
 
 // Merchants arrive at port and decide to sell or buy if prices meet their expectations.
 export class Merchant extends Logger {
-  // TODO: Should probably have an ID.
+  public name: string;
   public wealth: Price;
   public readonly cargo: Map<ResourceID, Quantity>;
   private readonly minSalePrices: Map<ResourceID, Price>;
@@ -12,6 +12,7 @@ export class Merchant extends Logger {
   private market: GlobalMarket;
 
   constructor(
+    name: string,
     initialWealth: Price,
     cargo: [ResourceID, Quantity][],
     minSalePrices: [ResourceID, Quantity][],
@@ -19,6 +20,7 @@ export class Merchant extends Logger {
     market: GlobalMarket,
   ) {
     super();
+    this.name = name;
     this.wealth = initialWealth;
     this.market = market;
     this.cargo = new Map(cargo);
