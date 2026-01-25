@@ -16,4 +16,11 @@ export const merchantDefs: MerchantDef[] = [
     minSalePrices: [],
     maxBuyPrices: [["plastic", 15]],
   },
+  // Food trader
+  {
+    initialWealth: 20,
+    cargo: [["food", 15]],
+    minSalePrices: [["food", 3]],
+    maxBuyPrices: [["food", 1]],
+  },
 ];

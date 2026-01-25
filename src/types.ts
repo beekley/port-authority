@@ -32,3 +32,25 @@ export interface MerchantDef {
   minSalePrices: [ResourceID, Price][];
   maxBuyPrices: [ResourceID, Price][];
 }
+
+export interface GameState {
+  tickCount: number;
+  population: Quantity;
+  wealth: Price;
+  resources: Record<
+    string,
+    {
+      count: Quantity;
+      price: Price;
+      modifier: Fraction;
+    }
+  >;
+}
+
+export interface GameLogEvent {
+  type: "SHIP_ARRIVAL" | "AGENT_EVICTION" | "AGENT_ADDITION";
+  timestamp?: string;
+  message: string;
+}
+
+export type GameTickListener = (state: GameState, logs: GameLogEvent[]) => void;

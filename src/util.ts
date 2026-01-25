@@ -12,7 +12,7 @@ export function getSeededRandom<T>(
   values: T[],
 ): T {
   const diceroll = tickCount * seed;
-  return values[diceroll % values.length];
+  return structuredClone(values[diceroll % values.length]);
 }
 
 export class Logger {

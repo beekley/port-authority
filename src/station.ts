@@ -3,6 +3,8 @@ import { GlobalMarket, profitability } from "./market";
 import { RecipeDef } from "./types";
 import { Logger } from "./util";
 
+const DAILY_FOOD_CONSUMPTION = 1.7; // kg/day/person.
+
 interface Facility {
   agent?: Agent;
 }
@@ -10,6 +12,7 @@ interface Facility {
 export class Station extends Logger {
   public readonly market: GlobalMarket;
   public readonly facilities: Facility[] = [];
+  public population: number = 100; // Initial population
   public readonly availableRecipes: RecipeDef[];
 
   constructor(
@@ -48,6 +51,11 @@ export class Station extends Logger {
       market.tick();
     }
 
+    // Consume food.
+    this.consumeFood();
+
+    // Manage facilities
+
     for (const facility of this.facilities) {
       // Add new agent to meet demand
       if (!facility.agent) {
@@ -61,6 +69,28 @@ export class Station extends Logger {
         this.evictAgent(facility);
       }
     }
+  }
+
+  // Basic linear consumption of food.
+  // TODO: vary the consumption rate.
+  private consumeFood() {
+    const foodMarket = this.market.resourceMarkets.get("food");
+    if (!foodMarket) {
+      this.log(`No food market!`);
+      return;
+    }
+    const foodConsumption = Math.floor(
+      (this.population * DAILY_FOOD_CONSUMPTION) / 24,
+    );
+    // TODO: where does this money come from? Maybe per agent?
+    const transaction = foodMarket.buyFromMarket(foodConsumption);
+    if (transaction.quantity < foodConsumption) {
+      this.log(`Starvation! Could only get ${transaction.quantity} food`);
+      this.population *= 0.9; // Simulate population decline
+    }
+    this.log(
+      `Consumed ${transaction.quantity} food. Population: ${this.population}`,
+    );
   }
 
   private addAgent(facility: Facility) {

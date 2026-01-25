@@ -4,29 +4,16 @@ import { recipeDefs } from "./market.data";
 import { Merchant } from "./merchant";
 import { merchantDefs } from "./merchant.data";
 import { Station } from "./station";
-import { Fraction, MerchantDef, Price, Quantity, RecipeDef } from "./types";
+import {
+  GameLogEvent,
+  GameState,
+  GameTickListener,
+  MerchantDef,
+  RecipeDef,
+} from "./types";
 import { getSeededRandom, Logger } from "./util";
 
-export interface GameState {
-  tickCount: number;
-  wealth: Price;
-  resources: Record<
-    string,
-    {
-      count: Quantity;
-      price: Price;
-      modifier: Fraction;
-    }
-  >;
-}
-
-// 2. The Ephemeral Events: Things that happened THIS tick (for the log)
-export interface GameLogEvent {
-  type: "SHIP_ARRIVAL" | "AGENT_EVICTION" | "AGENT_ADDITION";
-  message: string;
-}
-
-export type GameTickListener = (state: GameState, logs: GameLogEvent[]) => void;
+const MAX_EVENT_HISTORY = 3;
 
 // TODOs:
 // - player can set tarrifs / subsidies
@@ -36,6 +23,8 @@ export class Game extends Logger {
   private tickCount = 0;
   private readonly seed: number;
   private subscribers: GameTickListener[] = [];
+  // Ring buffer
+  private eventLogs: GameLogEvent[] = [];
 
   constructor(seed: number) {
     super(true);
@@ -48,10 +37,15 @@ export class Game extends Logger {
   }
 
   public tick() {
+    // Logs maintenance.
     this.log(`\n~~ Tick ${this.tickCount} ~~`);
 
     // Create visiting merchants.
     const visitingMerchant = this.getRandomMerchant();
+    this.addGameEvent({
+      type: "SHIP_ARRIVAL",
+      message: `${visitingMerchant.id} arrived with ${visitingMerchant.wealth.toFixed(2)} wealth`,
+    });
     visitingMerchant.tick();
 
     // Run the sim.
@@ -72,6 +66,7 @@ export class Game extends Logger {
   private notifyListeners() {
     const state: GameState = {
       tickCount: this.tickCount,
+      population: this.station.population,
       wealth: this.station.market.wealth,
       resources: {},
     };
@@ -86,12 +81,17 @@ export class Game extends Logger {
       };
     }
 
-    // Nothing yet.
-    const logs: GameLogEvent[] = [];
-
     for (const listener of this.subscribers) {
-      listener(state, logs);
+      listener(state, this.eventLogs);
     }
+  }
+
+  private addGameEvent(event: GameLogEvent) {
+    if (this.eventLogs.length >= MAX_EVENT_HISTORY) {
+      this.eventLogs.pop();
+    }
+    event.timestamp = this.tickCount.toString();
+    this.eventLogs.unshift(event);
   }
 
   private getRandomMerchant(): Merchant {

@@ -4,7 +4,7 @@ import { Game } from "./game";
 import * as readline from "readline";
 import { getSeed, SILENT } from "./util";
 
-const MAX_TPS = 10;
+const MAX_TPS = 1;
 
 // Log our own state.
 env.LOGGING = SILENT;
@@ -37,7 +37,9 @@ game.subscribe((state, logs) => {
 
   // Draw Event Log
   console.log(`\n--- LOG ---`);
-  logs.forEach((log) => console.log(`> [${log.type}] ${log.message}`));
+  logs.forEach((log) =>
+    console.log(`> [tick ${log.timestamp}] [${log.type}] ${log.message}`),
+  );
 });
 
 function togglePlay() {
