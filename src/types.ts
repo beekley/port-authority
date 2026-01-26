@@ -44,7 +44,8 @@ export interface GameState {
     {
       count: Quantity;
       price: Price;
-      modifier: Fraction;
+      importModifier: Fraction;
+      exportModifier: Fraction;
     }
   >;
 }

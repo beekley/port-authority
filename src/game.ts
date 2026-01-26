@@ -74,10 +74,15 @@ export class Game extends Logger {
       resourceId,
       market,
     ] of this.station.market.resourceMarkets.entries()) {
+      const importModifier =
+        this.station.market.importModifiers.get(resourceId) || 0;
+      const exportModifier =
+        this.station.market.exportModifiers.get(resourceId) || 0;
       state.resources[resourceId] = {
         count: market.stock,
         price: market.price,
-        modifier: 0,
+        importModifier,
+        exportModifier,
       };
     }
 
