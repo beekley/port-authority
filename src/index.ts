@@ -1,8 +1,6 @@
-// cli.ts
-import { env } from "process";
 import { Game } from "./game";
 import * as readline from "readline";
-import { getSeed, SILENT } from "./util";
+import { getSeed } from "./util";
 
 const MAX_TPS = 1;
 
@@ -25,6 +23,7 @@ game.subscribe((state, logs) => {
   // Draw Dashboard
   console.log(`=== PORT AUTHORITY (Tick: ${state.tickCount}) ===`);
   console.log(`Port Wealth: $${state.wealth.toFixed(2)}`);
+  console.log(`Port Pop: ${state.population.toFixed(0)}`);
   console.log(`-------------------------------------------`);
 
   for (const [id, res] of Object.entries(state.resources)) {

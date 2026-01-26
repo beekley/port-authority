@@ -5,7 +5,8 @@ export type ResourceID =
   | "fuel"
   | "plastic"
   | "steel"
-  | "water";
+  | "clean water"
+  | "dirty water";
 
 export type Quantity = number;
 export type Price = number;
@@ -49,7 +50,7 @@ export interface GameState {
 }
 
 export interface GameLogEvent {
-  type: "SHIP_ARRIVAL" | "AGENT_EVICTION" | "AGENT_ADDITION";
+  type: "SHIP_ARRIVAL" | "AGENT_EVICTION" | "AGENT_ADDITION" | "POP_LOSS";
   timestamp?: string;
   message: string;
 }

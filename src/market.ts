@@ -1,4 +1,4 @@
-import { initialPrices } from "./market.data";
+import { initialPrices, initialQuantity } from "./market.data";
 import {
   Fraction,
   Price,
@@ -111,6 +111,26 @@ export class ResourceMarket extends Logger {
     };
   }
 
+  // Like buyFromMarket, but no money is exchanged.
+  public consumeFromMarket(quantity: Quantity): Transaction {
+    // Check if enough in stock.
+    if (this.stock < quantity) {
+      // Responsibility of caller to prevent this.
+      return {
+        resourceId: this.resourceId,
+        quantity: 0,
+        totalPrice: 0,
+      };
+    }
+    this.tickConsumptionCount += quantity;
+    this.stock -= quantity;
+    return {
+      resourceId: this.resourceId,
+      quantity,
+      totalPrice: 0,
+    };
+  }
+
   public importUnitPrice(): Price {
     const importModifier =
       this.globalMarket.importModifiers.get(this.resourceId) || 0;
@@ -148,10 +168,9 @@ export function getCompleteMarket(): GlobalMarket {
   const market = new GlobalMarket();
   for (const [resourceId, price] of initialPrices) {
     if (!market.resourceMarkets.has(resourceId)) {
-      market.resourceMarkets.set(
-        resourceId,
-        new ResourceMarket(resourceId, price, market),
-      );
+      const resourceMarket = new ResourceMarket(resourceId, price, market);
+      resourceMarket.stock = initialQuantity.get(resourceId) || 0;
+      market.resourceMarkets.set(resourceId, resourceMarket);
     }
   }
   return market;

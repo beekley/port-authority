@@ -83,7 +83,7 @@ export class Station extends Logger {
       (this.population * DAILY_FOOD_CONSUMPTION) / 24,
     );
     // TODO: where does this money come from? Maybe per agent?
-    const transaction = foodMarket.buyFromMarket(foodConsumption);
+    const transaction = foodMarket.consumeFromMarket(foodConsumption);
     if (transaction.quantity < foodConsumption) {
       this.log(`Starvation! Could only get ${transaction.quantity} food`);
       this.population *= 0.9; // Simulate population decline

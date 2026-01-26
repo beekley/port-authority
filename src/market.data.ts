@@ -1,4 +1,4 @@
-import { Price, RecipeDef, ResourceID } from "./types";
+import { Price, Quantity, RecipeDef, ResourceID } from "./types";
 
 export const recipeDefs: RecipeDef[] = [
   // Turn biomass into food
@@ -27,4 +27,12 @@ export const initialPrices: Map<ResourceID, Price> = new Map([
   ["fuel", 10],
   ["plastic", 10],
   ["steel", 20],
+]);
+
+export const initialQuantity: Map<ResourceID, Quantity> = new Map([
+  ["biomass", 20],
+  ["food", 50],
+  ["fuel", 10],
+  ["plastic", 0],
+  ["steel", 0],
 ]);
