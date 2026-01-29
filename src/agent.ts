@@ -10,7 +10,6 @@ export type State = "producing" | "insufficient production";
 export class Agent extends Logger {
   // Variables
   public state: State = "producing";
-  public wealth: Price;
   private readonly storage: Map<ResourceID, Quantity> = new Map();
   private ticksWithoutProduction: number = 0;
 
@@ -18,13 +17,8 @@ export class Agent extends Logger {
   public readonly recipe: RecipeDef;
   private readonly market: GlobalMarket;
 
-  constructor(
-    initialWealth: Price,
-    productionRecipe: RecipeDef,
-    market: GlobalMarket,
-  ) {
+  constructor(productionRecipe: RecipeDef, market: GlobalMarket) {
     super();
-    this.wealth = initialWealth;
     this.recipe = productionRecipe;
     this.market = market;
   }
@@ -112,24 +106,12 @@ export class Agent extends Logger {
       this.log(`Agent could not buy ${quantity} ${resourceId}: no market`);
       return { resourceId, quantity: 0, totalPrice: 0 };
     }
-
-    // Buy as many as the agent can afford.
-    const totalCost = resourceMarket.price * quantity;
-    if (totalCost < this.wealth) {
-      const transaction = resourceMarket.buyFromMarket(quantity);
-      this.wealth -= transaction.totalPrice;
+    const transaction = resourceMarket.buyFromMarket(quantity);
+    if (transaction.quantity > 0) {
       this.log(
         `Agent bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice.toFixed(2)} (full order)`,
       );
-      return transaction;
     }
-
-    const affordableQuantity = Math.floor(this.wealth / resourceMarket.price);
-    const transaction = resourceMarket.buyFromMarket(affordableQuantity);
-    this.wealth -= transaction.totalPrice;
-    this.log(
-      `Agent bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice.toFixed(2)} (partial order ${transaction.quantity} / ${quantity})`,
-    );
     return transaction;
   }
 

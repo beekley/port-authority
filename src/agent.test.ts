@@ -21,7 +21,7 @@ describe("Agent", () => {
     steelMarket = new ResourceMarket("steel", 10, market);
     market.resourceMarkets.set("food", foodMarket);
     market.resourceMarkets.set("steel", steelMarket);
-    agent = new Agent(100, recipe, market);
+    agent = new Agent(recipe, market);
   });
 
   it("should buy needed resources for a recipe", () => {
@@ -30,25 +30,13 @@ describe("Agent", () => {
     agent.tick();
 
     console.log(agent);
-    expect(agent.wealth).toBe(90); // 100 - 1*10
     expect(foodMarket.stock).toBe(0); // Agent bought the 1 food
-  });
-
-  it("should not buy resources if it cannot afford them", () => {
-    agent.wealth = 5;
-    foodMarket.sellToMarket(1);
-
-    agent.tick();
-
-    expect(agent.wealth).toBe(5); // Not enough money
-    expect(foodMarket.stock).toBe(1); // Should not have bought anything
   });
 
   it("should produce resources and sell them to the market", () => {
     // Tick 1: Buy resources
     foodMarket.sellToMarket(1);
     agent.tick();
-    expect(agent.wealth).toBe(90);
     expect(foodMarket.stock).toBe(0);
 
     // Should have produced 2 food, and sold them.
@@ -58,17 +46,14 @@ describe("Agent", () => {
   });
 
   it("should update state to 'insufficient production' after MAX_TICKS_WITHOUT_PRODUCTION ticks", () => {
-    foodMarket.sellToMarket(1);
-    agent.wealth = 0; // Agent cannot afford resources.
-
     for (let i = 0; i < 6; i++) {
       agent.tick();
     }
 
     expect(agent.state).toBe("insufficient production");
 
-    // Magically give it wealth and it should produce again.
-    agent.wealth = 100;
+    // Fill market and it should produce again.
+    foodMarket.sellToMarket(1);
     agent.tick();
 
     expect(agent.state).toBe("producing");

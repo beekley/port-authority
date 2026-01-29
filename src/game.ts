@@ -132,7 +132,7 @@ export class Game extends Logger {
       if (facility.agent) {
         const agent = facility.agent;
         this.log(
-          `  - [${agent.id}] ${agent.recipe.displayName} with ${agent.wealth.toFixed(2)} wealth, ${agent.state}`,
+          `  - [${agent.id}] ${agent.recipe.displayName}, ${agent.state}`,
         );
       } else {
         this.log(`  - No agent`);
