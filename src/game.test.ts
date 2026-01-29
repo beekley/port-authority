@@ -40,4 +40,24 @@ describe("Game", () => {
       `Took ${durationMs.toFixed(1)}ms, ${(tickCount / (durationMs / 1000)).toFixed(0)} ticks / sec; ${testRamMb.toFixed(2)}MB test RAM, ${processRamMb.toFixed(2)}MB process RAM`,
     );
   });
+
+  it("should populate trade policy in state notifications", () => {
+    const game = new Game(123);
+    const market = game.station.market.resourceMarkets.get("food");
+    if (!market) throw new Error("Food market not found");
+
+    // Default
+    let latestState: any;
+    game.subscribe((state) => {
+      latestState = state;
+    });
+
+    game.tick();
+    expect(latestState.resources["food"].importForbidden).toBe(false);
+
+    // Change policy
+    market.tradePolicy.importForbidden = true;
+    game.tick();
+    expect(latestState.resources["food"].importForbidden).toBe(true);
+  });
 });

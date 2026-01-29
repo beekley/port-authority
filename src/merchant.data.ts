@@ -7,23 +7,23 @@ export const merchantDefs: MerchantDef[] = [
     name: "Biomass Importer",
     initialWealth: 30,
     cargo: [["biomass", 20]],
-    minSalePrices: [["biomass", 1]],
-    maxBuyPrices: [],
+    wantsToBuy: [],
+    profitMargin: 0.1,
   },
   // Plastic exporter
   {
     name: "Plastic Exporter",
     initialWealth: 50,
     cargo: [],
-    minSalePrices: [],
-    maxBuyPrices: [["plastic", 15]],
+    wantsToBuy: ["plastic"],
+    profitMargin: 0.2,
   },
   // Food trader
   {
     name: "Food Trader",
     initialWealth: 20,
     cargo: [["food", 15]],
-    minSalePrices: [["food", 3]],
-    maxBuyPrices: [["food", 1]],
+    wantsToBuy: ["food"],
+    profitMargin: 0.05,
   },
 ];

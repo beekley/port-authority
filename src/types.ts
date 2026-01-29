@@ -18,6 +18,16 @@ export interface Transaction {
   totalPrice: Price;
 }
 
+export interface TradePolicy {
+  // Fraction added/removed from the market price.
+  importPriceModifier?: Fraction;
+  exportPriceModifier?: Fraction;
+
+  // Bans external trade.
+  importForbidden?: boolean;
+  exportForbidden?: boolean;
+}
+
 export interface RecipeDef {
   displayName: string;
   // processTimeTicks: number; TODO
@@ -31,8 +41,8 @@ export interface MerchantDef {
   name?: string;
   initialWealth: Price;
   cargo: [ResourceID, Quantity][];
-  minSalePrices: [ResourceID, Price][];
-  maxBuyPrices: [ResourceID, Price][];
+  wantsToBuy: ResourceID[];
+  profitMargin: Fraction;
 }
 
 export interface GameState {
@@ -46,6 +56,8 @@ export interface GameState {
       price: Price;
       importModifier: Fraction;
       exportModifier: Fraction;
+      importForbidden: boolean;
+      exportForbidden: boolean;
     }
   >;
 }

@@ -5,6 +5,7 @@ import {
   Quantity,
   RecipeDef,
   ResourceID,
+  TradePolicy,
   Transaction,
 } from "./types";
 import { Logger } from "./util";
@@ -13,10 +14,6 @@ const PRICE_INCREASE_FRACTION = 0.2;
 
 export class GlobalMarket {
   resourceMarkets: Map<ResourceID, ResourceMarket> = new Map();
-  // Vales >0 subsidize imports by paying importers more than market price.
-  importModifiers: Map<ResourceID, Fraction> = new Map();
-  // Vales <0 subsidize exports by charging exporters less than market price.
-  exportModifiers: Map<ResourceID, Fraction> = new Map();
   wealth: Price = 100;
 }
 
@@ -47,6 +44,7 @@ export class ResourceMarket extends Logger {
   public readonly resourceId: ResourceID;
   public stock: Quantity = 0;
   public price: Price; // Do not set except within this class
+  public tradePolicy: TradePolicy = {};
 
   private globalMarket: GlobalMarket;
   // How many of the resource were produced (and sold) to the market.
@@ -67,14 +65,24 @@ export class ResourceMarket extends Logger {
 
   public sellToMarket(
     quantity: Quantity,
-    isImport: boolean = false,
+    priceMultiplier: number = 1,
   ): Transaction {
+    if (this.tradePolicy.importForbidden) {
+      return {
+        resourceId: this.resourceId,
+        quantity: 0,
+        totalPrice: 0,
+      };
+    }
+
     // Sell to the market as much as the global market can afford.
-    const unitPrice = isImport ? this.importUnitPrice() : this.price;
-    const quantityToSell = Math.min(
-      quantity,
-      Math.floor(this.globalMarket.wealth / unitPrice),
-    );
+    const policyMultiplier = 1 + (this.tradePolicy.importPriceModifier || 0);
+    const unitPrice = this.price * priceMultiplier * policyMultiplier;
+
+    // Check affordability
+    const maxAffordable = Math.floor(this.globalMarket.wealth / unitPrice);
+    const quantityToSell = Math.min(quantity, maxAffordable);
+    
     const totalPrice = unitPrice * quantityToSell;
     this.globalMarket.wealth -= totalPrice;
     this.tickProductionCount += quantityToSell;
@@ -88,18 +96,29 @@ export class ResourceMarket extends Logger {
 
   public buyFromMarket(
     quantity: Quantity,
-    isExport: boolean = false,
+    priceMultiplier: number = 1,
   ): Transaction {
-    // Check if enough in stock.
-    if (this.stock < quantity) {
-      // Responsibility of caller to prevent this.
+    // Check trade policy
+    if (this.tradePolicy.exportForbidden) {
       return {
         resourceId: this.resourceId,
         quantity: 0,
         totalPrice: 0,
       };
     }
-    const unitPrice = isExport ? this.exportUnitPrice() : this.price;
+    
+    // Check if enough in stock.
+    if (this.stock < quantity) {
+      return {
+        resourceId: this.resourceId,
+        quantity: 0,
+        totalPrice: 0,
+      };
+    }
+
+    const policyMultiplier = 1 + (this.tradePolicy.exportPriceModifier || 0);
+    const unitPrice = this.price * priceMultiplier * policyMultiplier;
+    
     const totalPrice = unitPrice * quantity;
     this.tickConsumptionCount += quantity;
     this.stock -= quantity;
@@ -129,18 +148,6 @@ export class ResourceMarket extends Logger {
       quantity,
       totalPrice: 0,
     };
-  }
-
-  public importUnitPrice(): Price {
-    const importModifier =
-      this.globalMarket.importModifiers.get(this.resourceId) || 0;
-    return this.price * (1 + importModifier);
-  }
-
-  public exportUnitPrice(): Price {
-    const exportModifier =
-      this.globalMarket.exportModifiers.get(this.resourceId) || 0;
-    return this.price * (1 + exportModifier);
   }
 
   public tick() {

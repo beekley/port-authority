@@ -5,8 +5,9 @@ This is a simulation game / recreational software where you play as the Port Aut
 ## TODO
 
 - Agents require pop and energy
-- Remove wealth of agents. They take what they need from the market.
 - Add day/night cycles
 - Merchants arrive periodically and stay
-- Build web UI
+- Mechanism to add facilities
+- Mechanism to add pop
 - Add more content
+- Build web UI

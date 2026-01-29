@@ -53,39 +53,39 @@ describe("ResourceMarket", () => {
     expect(market.price).toBe(initialPrice);
   });
 
-  it("should apply tarrifs to import but not local sale prices", () => {
-    // Pre-tarrif.
-    const importTx1 = market.sellToMarket(2, true);
-    expect(importTx1.totalPrice).toBe(2 * initialPrice);
 
-    // Apply tarrif
-    const importModifier = 0.1;
-    market.globalMarket.importModifiers.set(resourceId, importModifier);
 
-    // Post-tarrif
-    const localTx = market.sellToMarket(2);
-    expect(localTx.totalPrice).toBe(2 * initialPrice);
-    const importTx2 = market.sellToMarket(2, true);
-    expect(importTx2.totalPrice).toBe(2 * initialPrice * (1 + importModifier));
-  });
+  describe("TradePolicy", () => {
+    it("should forbid imports", () => {
+      market.tradePolicy.importForbidden = true;
+      const tx = market.sellToMarket(10, 1);
+      expect(tx.quantity).toBe(0);
+      expect(tx.totalPrice).toBe(0);
+    });
 
-  it("should apply tarrifs to export but not local purchase prices", () => {
-    // Fill market
-    market.sellToMarket(50);
+    it("should forbid exports", () => {
+      market.tradePolicy.exportForbidden = true;
+      // Stock up first
+      market.stock = 100;
+      const tx = market.buyFromMarket(10, 1);
+      expect(tx.quantity).toBe(0);
+      expect(tx.totalPrice).toBe(0);
+    });
 
-    // Pre-tarrif.
-    const exportTx1 = market.buyFromMarket(2, true);
-    expect(exportTx1.totalPrice).toBe(2 * initialPrice);
+    it("should apply import price modifier", () => {
+      market.tradePolicy.importPriceModifier = 0.5; // +50%
+      // Base price 100 * 1.5 = 150
+      const tx = market.sellToMarket(10, 1);
+      expect(tx.totalPrice).toBe(1500);
+    });
 
-    // Apply tarrif
-    const exportModifier = 0.1;
-    market.globalMarket.exportModifiers.set(resourceId, exportModifier);
-
-    // Post-tarrif
-    const localTx = market.buyFromMarket(2);
-    expect(localTx.totalPrice).toBe(2 * initialPrice);
-    const exportTx2 = market.buyFromMarket(2, true);
-    expect(exportTx2.totalPrice).toBe(2 * initialPrice * (1 + exportModifier));
+    it("should apply export price modifier", () => {
+      market.tradePolicy.exportPriceModifier = -0.5; // -50%
+      // Base price 100 * 0.5 = 50
+      market.stock = 100;
+      const tx = market.buyFromMarket(10, 1);
+      expect(tx.totalPrice).toBe(500);
+    });
   });
 });
 

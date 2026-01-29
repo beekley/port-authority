@@ -33,10 +33,12 @@ process.stdin.on("keypress", (_, key) => {
   if (!resourceIds.length) return;
 
   const selectedResource = resourceIds[selectedResourceIndex] as ResourceID;
-  if (key?.name === "i") adjustImportModifier(selectedResource, 0.1);
-  if (key?.name === "k") adjustImportModifier(selectedResource, -0.1);
-  if (key?.name === "e") adjustExportModifier(selectedResource, 0.1);
-  if (key?.name === "d") adjustExportModifier(selectedResource, -0.1);
+  if (key?.name === "i") toggleImportBan(selectedResource);
+  if (key?.name === "e") toggleExportBan(selectedResource);
+  // if (key?.name === "i") adjustImportModifier(selectedResource, 0.1);
+  // if (key?.name === "k") adjustImportModifier(selectedResource, -0.1);
+  // if (key?.name === "e") adjustExportModifier(selectedResource, 0.1);
+  // if (key?.name === "d") adjustExportModifier(selectedResource, -0.1);
 });
 
 // 2. Setup Output (Subscription)
@@ -62,11 +64,13 @@ function updateUi() {
   const selectedResource = resourceIds[selectedResourceIndex] as ResourceID;
   for (const [id, res] of Object.entries(state.resources)) {
     const isSelected = id === selectedResource;
-    const local = `local: $${res.price.toFixed(2)}`;
-    const imp = `imp: $${(res.price * (1 + res.importModifier)).toFixed(2)} (${(100 * res.importModifier).toFixed(0)}%)`;
-    const exp = `exp: $${(res.price * (1 + res.exportModifier)).toFixed(2)} (${(100 * res.exportModifier).toFixed(0)}%)`;
+    const priceStr = `Price: $${res.price.toFixed(2)}`;
+    // const impPrice = (res.price * (1 + res.importModifier)).toFixed(2);
+    const countStr = `Stored: ${res.count.toFixed(0)}`;
+    const impStr = res.importForbidden ? "IMPORTS BANNED" : "";
+    const expStr = res.exportForbidden ? "EXPORTS BANNED" : "";
     console.log(
-      `${isSelected ? "> " : "  "}${id.toUpperCase().padEnd(7)}: [${res.count}] ${local}, ${imp}, ${exp}`,
+      `${isSelected ? "> " : "  "}${id.toUpperCase().padEnd(10)} | ${countStr.padEnd(12)} | ${priceStr.padEnd(15)} | ${impStr} ${expStr}`,
     );
   }
 
@@ -77,17 +81,31 @@ function updateUi() {
   );
 }
 
-function adjustImportModifier(resourceId: ResourceID, amount: number) {
-  const market = game.station.market;
-  const currentModifier = market.importModifiers.get(resourceId) || 0;
-  market.importModifiers.set(resourceId, currentModifier + amount);
+function toggleImportBan(resourceId: ResourceID) {
+  const market = game.station.market.resourceMarkets.get(resourceId);
+  if (market) {
+    market.tradePolicy.importForbidden = !market.tradePolicy.importForbidden;
+  }
 }
 
-function adjustExportModifier(resourceId: ResourceID, amount: number) {
-  const market = game.station.market;
-  const currentModifier = market.exportModifiers.get(resourceId) || 0;
-  market.exportModifiers.set(resourceId, currentModifier + amount);
+function toggleExportBan(resourceId: ResourceID) {
+  const market = game.station.market.resourceMarkets.get(resourceId);
+  if (market) {
+    market.tradePolicy.exportForbidden = !market.tradePolicy.exportForbidden;
+  }
 }
+
+// function adjustImportModifier(resourceId: ResourceID, amount: number) {
+//   const market = game.station.market;
+//   const currentModifier = market.importModifiers.get(resourceId) || 0;
+//   market.importModifiers.set(resourceId, currentModifier + amount);
+// }
+
+// function adjustExportModifier(resourceId: ResourceID, amount: number) {
+//   const market = game.station.market;
+//   const currentModifier = market.exportModifiers.get(resourceId) || 0;
+//   market.exportModifiers.set(resourceId, currentModifier + amount);
+// }
 
 function togglePlay() {
   // Was paused -> play

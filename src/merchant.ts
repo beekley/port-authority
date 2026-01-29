@@ -1,5 +1,5 @@
 import { GlobalMarket } from "./market";
-import { ResourceID, Quantity, Price, Transaction } from "./types";
+import { ResourceID, Quantity, Price, Transaction, Fraction } from "./types";
 import { Logger } from "./util";
 
 // Merchants arrive at port and decide to sell or buy if prices meet their expectations.
@@ -7,16 +7,16 @@ export class Merchant extends Logger {
   public name: string;
   public wealth: Price;
   public readonly cargo: Map<ResourceID, Quantity>;
-  private readonly minSalePrices: Map<ResourceID, Price>;
-  private readonly maxBuyPrices: Map<ResourceID, Price>;
+  public readonly wantsToBuy: ResourceID[];
+  public readonly profitMargin: Fraction;
   private market: GlobalMarket;
 
   constructor(
     name: string,
     initialWealth: Price,
     cargo: [ResourceID, Quantity][],
-    minSalePrices: [ResourceID, Quantity][],
-    maxBuyPrices: [ResourceID, Quantity][],
+    wantsToBuy: ResourceID[],
+    profitMargin: Fraction,
     market: GlobalMarket,
   ) {
     super();
@@ -24,16 +24,18 @@ export class Merchant extends Logger {
     this.wealth = initialWealth;
     this.market = market;
     this.cargo = new Map(cargo);
-    this.minSalePrices = new Map(minSalePrices);
-    this.maxBuyPrices = new Map(maxBuyPrices);
+    this.wantsToBuy = wantsToBuy;
+    this.profitMargin = profitMargin;
   }
 
   public tick() {
-    for (const resourceId of this.minSalePrices.keys()) {
-      this.log(`Merchant selling ${resourceId}`);
-      this.sell(resourceId);
+    for (const resourceId of this.cargo.keys()) {
+      if ((this.cargo.get(resourceId) || 0) > 0) {
+        this.log(`Merchant selling ${resourceId}`);
+        this.sell(resourceId);
+      }
     }
-    for (const resourceId of this.maxBuyPrices.keys()) {
+    for (const resourceId of this.wantsToBuy) {
       this.log(`Merchant buying ${resourceId}`);
       this.buy(resourceId);
     }
@@ -45,25 +47,17 @@ export class Merchant extends Logger {
       throw new Error(`Merchant could not sell ${resourceId}: no market`);
     }
 
-    const minSalePrice = this.minSalePrices.get(resourceId);
-    if (!minSalePrice) {
-      throw new Error(
-        `Merchant could not sell ${resourceId}: no desired sale price`,
-      );
-    }
-
-    const importUnitPrice = market.importUnitPrice();
-    if (importUnitPrice >= minSalePrice) {
-      const cargoQuantity = this.cargo.get(resourceId) || 0;
-      const transaction = market.sellToMarket(cargoQuantity, true);
-      this.wealth += transaction.totalPrice;
-      this.cargo.set(resourceId, cargoQuantity - transaction.quantity);
+    const cargoQuantity = this.cargo.get(resourceId) || 0;
+    // Sell at market price + profit.
+    const transaction = market.sellToMarket(cargoQuantity, 1 + this.profitMargin);
+    this.wealth += transaction.totalPrice;
+    this.cargo.set(resourceId, cargoQuantity - transaction.quantity);
+    if (transaction.quantity > 0) {
       this.log(
         `Merchant sold ${transaction.quantity} ${resourceId} for ${transaction.totalPrice.toFixed(2)}`,
       );
-      return transaction;
     }
-    return { resourceId, quantity: 0, totalPrice: 0 };
+    return transaction;
   }
 
   private buy(resourceId: ResourceID): Transaction {
@@ -72,22 +66,17 @@ export class Merchant extends Logger {
       throw new Error(`Merchant could not buy ${resourceId}: no market`);
     }
 
-    const maxBuyPrice = this.maxBuyPrices.get(resourceId);
-    if (!maxBuyPrice) {
-      throw new Error(
-        `Merchant could not buy ${resourceId}: no desired buy price`,
-      );
-    }
-    if (market.price <= maxBuyPrice) {
-      const cargoQuantity = this.cargo.get(resourceId) || 0;
+    // Buy as many as the merchant can afford.
+    // Buying at market price - profit.
+    const unitPrice = market.price * (1 - this.profitMargin);
+    const maxAffordableQuantity = Math.floor(this.wealth / unitPrice);
+    const quantity = Math.min(maxAffordableQuantity, market.stock);
 
-      // Buy as many as the merchant can afford.
-      const maxAffordableQuantity = Math.floor(this.wealth / market.price);
-      const quantity = Math.min(maxAffordableQuantity, market.stock);
-
-      const transaction = market.buyFromMarket(quantity, true);
+    if (quantity > 0) {
+      const transaction = market.buyFromMarket(quantity, 1 - this.profitMargin);
       this.wealth -= transaction.totalPrice;
-      this.cargo.set(resourceId, cargoQuantity + transaction.quantity);
+      const currentCargo = this.cargo.get(resourceId) || 0;
+      this.cargo.set(resourceId, currentCargo + transaction.quantity);
       this.log(
         `Merchant bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice.toFixed(2)}`,
       );

@@ -74,15 +74,15 @@ export class Game extends Logger {
       resourceId,
       market,
     ] of this.station.market.resourceMarkets.entries()) {
-      const importModifier =
-        this.station.market.importModifiers.get(resourceId) || 0;
-      const exportModifier =
-        this.station.market.exportModifiers.get(resourceId) || 0;
+      const importModifier = market.tradePolicy.importPriceModifier || 0;
+      const exportModifier = market.tradePolicy.exportPriceModifier || 0;
       state.resources[resourceId] = {
         count: market.stock,
         price: market.price,
         importModifier,
         exportModifier,
+        importForbidden: market.tradePolicy.importForbidden || false,
+        exportForbidden: market.tradePolicy.exportForbidden || false,
       };
     }
 
@@ -109,8 +109,8 @@ export class Game extends Logger {
       merchantDef.name || `Merchant ${this.tickCount}`,
       merchantDef.initialWealth,
       merchantDef.cargo,
-      merchantDef.minSalePrices,
-      merchantDef.maxBuyPrices,
+      merchantDef.wantsToBuy,
+      merchantDef.profitMargin,
       this.station.market,
     );
   }
