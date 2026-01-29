@@ -1,14 +1,19 @@
+// CLI
 import { Game } from "./game";
 import * as readline from "readline";
 import { getSeed } from "./util";
-import { ResourceID } from "./types";
+import { GameLogEvent, GameState, ResourceID } from "./types";
 
-const MAX_TPS = 1;
+const MAX_GAME_FPS = 1;
+const MAX_UI_FPS = 20;
 
-let tps: "1" | "2" = "1";
 let paused = true;
 let resourceIds: ResourceID[] = [];
 let selectedResourceIndex = 0;
+let gameState: GameState | null = null;
+let gameLogs: GameLogEvent[] = [];
+
+// 1. Setup Game
 
 const game = new Game(getSeed());
 
@@ -36,6 +41,15 @@ process.stdin.on("keypress", (_, key) => {
 
 // 2. Setup Output (Subscription)
 game.subscribe((state, logs) => {
+  gameState = state;
+  gameLogs = logs;
+});
+
+function updateUi() {
+  if (!gameState || !resourceIds) return;
+  const state = gameState;
+  const logs = gameLogs;
+
   console.clear();
   resourceIds = Object.keys(state.resources) as ResourceID[];
 
@@ -61,7 +75,7 @@ game.subscribe((state, logs) => {
   logs.forEach((log) =>
     console.log(`> [tick ${log.timestamp}] [${log.type}] ${log.message}`),
   );
-});
+}
 
 function adjustImportModifier(resourceId: ResourceID, amount: number) {
   const market = game.station.market;
@@ -83,9 +97,11 @@ function togglePlay() {
 // Game loop.
 setInterval(() => {
   if (paused) return;
-  if (tps === "1") {
-    game.tick();
-  }
-}, 1000 / MAX_TPS);
+  game.tick();
+}, 1000 / MAX_GAME_FPS);
+
+setInterval(() => {
+  updateUi();
+}, 1000 / MAX_UI_FPS);
 
 console.log("Press space to start and pause.");
