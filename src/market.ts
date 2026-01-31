@@ -1,4 +1,4 @@
-import { initialPrices, initialQuantity } from "./market.data";
+import { resourceDefs } from "./market.data";
 import {
   Fraction,
   Price,
@@ -184,10 +184,14 @@ export class ResourceMarket extends Logger {
 
 export function getCompleteMarket(): GlobalMarket {
   const market = new GlobalMarket();
-  for (const [resourceId, price] of initialPrices) {
+  for (const [resourceId, resourceDef] of resourceDefs) {
     if (!market.resourceMarkets.has(resourceId)) {
-      const resourceMarket = new ResourceMarket(resourceId, price, market);
-      resourceMarket.stock = initialQuantity.get(resourceId) || 0;
+      const resourceMarket = new ResourceMarket(
+        resourceId,
+        resourceDef.initialPrice,
+        market,
+      );
+      resourceMarket.stock = resourceDef.initialQuantity || 0;
       market.resourceMarkets.set(resourceId, resourceMarket);
     }
   }

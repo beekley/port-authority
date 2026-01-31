@@ -8,6 +8,15 @@ export type ResourceID =
   | "clean water"
   | "dirty water";
 
+export type ResourceUnit = "L" | "kg";
+
+export interface ResourceDef {
+  id: ResourceID;
+  initialPrice: Price;
+  initialQuantity: Quantity;
+  unit: ResourceUnit;
+}
+
 export type Quantity = number;
 export type Price = number;
 export type Fraction = number;
