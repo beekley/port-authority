@@ -82,7 +82,7 @@ export class ResourceMarket extends Logger {
     // Check affordability
     const maxAffordable = Math.floor(this.globalMarket.wealth / unitPrice);
     const quantityToSell = Math.min(quantity, maxAffordable);
-    
+
     const totalPrice = unitPrice * quantityToSell;
     this.globalMarket.wealth -= totalPrice;
     this.tickProductionCount += quantityToSell;
@@ -106,7 +106,7 @@ export class ResourceMarket extends Logger {
         totalPrice: 0,
       };
     }
-    
+
     // Check if enough in stock.
     if (this.stock < quantity) {
       return {
@@ -118,7 +118,7 @@ export class ResourceMarket extends Logger {
 
     const policyMultiplier = 1 + (this.tradePolicy.exportPriceModifier || 0);
     const unitPrice = this.price * priceMultiplier * policyMultiplier;
-    
+
     const totalPrice = unitPrice * quantity;
     this.tickConsumptionCount += quantity;
     this.stock -= quantity;
@@ -143,6 +143,17 @@ export class ResourceMarket extends Logger {
     }
     this.tickConsumptionCount += quantity;
     this.stock -= quantity;
+    return {
+      resourceId: this.resourceId,
+      quantity,
+      totalPrice: 0,
+    };
+  }
+
+  // Like sellToMarket, but no money is exchanged.
+  public giveToMarket(quantity: Quantity): Transaction {
+    this.tickProductionCount += quantity;
+    this.stock += quantity;
     return {
       resourceId: this.resourceId,
       quantity,

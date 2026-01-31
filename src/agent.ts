@@ -56,10 +56,10 @@ export class Agent extends Logger {
         this.log(`Agent could not sell ${resourceId}: no market`);
         continue;
       }
-      const transaction = market.sellToMarket(storedQuantity);
+      const transaction = market.giveToMarket(storedQuantity);
       soldQuantity += transaction.quantity;
       this.storage.set(resourceId, storedQuantity - transaction.quantity);
-      this.log(`Sold ${transaction.quantity} ${resourceId} to market.`);
+      this.log(`Gave ${transaction.quantity} ${resourceId} to market.`);
     }
 
     // Check if there was no production.
@@ -106,10 +106,10 @@ export class Agent extends Logger {
       this.log(`Agent could not buy ${quantity} ${resourceId}: no market`);
       return { resourceId, quantity: 0, totalPrice: 0 };
     }
-    const transaction = resourceMarket.buyFromMarket(quantity);
+    const transaction = resourceMarket.consumeFromMarket(quantity);
     if (transaction.quantity > 0) {
       this.log(
-        `Agent bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice.toFixed(2)} (full order)`,
+        `Agent consumed ${transaction.quantity} ${resourceId} for ${transaction.totalPrice.toFixed(2)} (full order)`,
       );
     }
     return transaction;
@@ -124,7 +124,7 @@ export class Agent extends Logger {
         this.log(`Agent could not sell ${resourceId}: no market`);
         continue;
       }
-      const transaction = market.sellToMarket(storedQuantity);
+      const transaction = market.giveToMarket(storedQuantity);
     }
     this.log(`Agent ready for eviction`);
   }

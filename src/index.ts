@@ -4,7 +4,7 @@ import * as readline from "readline";
 import { getSeed } from "./util";
 import { GameLogEvent, GameState, ResourceID } from "./types";
 
-const MAX_GAME_FPS = 1;
+const MAX_GAME_FPS = 0.5;
 const MAX_UI_FPS = 20;
 
 let paused = true;
