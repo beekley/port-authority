@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { Station } from "./station";
 import { Agent } from "./agent";
 import { GlobalMarket, ResourceMarket } from "./market";
-import { RecipeDef } from "./types";
+import { RecipeDef, Tick } from "./types";
 
 describe("Station", () => {
   let station: Station;
@@ -12,6 +12,12 @@ describe("Station", () => {
   let agents: Agent[];
   let recipes: RecipeDef[];
   let recipe: RecipeDef;
+
+  const mockTick: Tick = {
+    tickCount: 0,
+    hour: () => 0,
+    day: () => 1,
+  };
 
   beforeEach(() => {
     market = new GlobalMarket();
@@ -35,24 +41,24 @@ describe("Station", () => {
     foodMarket.tick = () => marketTickedCount++;
 
     let agentTickedCount = 0;
-    const mockAgent = new Agent(100, recipe, market);
+    const mockAgent = new Agent(recipe, market);
     mockAgent.tick = () => agentTickedCount++;
 
     station = new Station(market, [mockAgent], []);
-    station.tick();
+    station.tick(mockTick);
 
     expect(marketTickedCount).toBe(1);
     expect(agentTickedCount).toBe(1);
 
-    station.tick();
+    station.tick(mockTick);
 
     expect(marketTickedCount).toBe(2);
     expect(agentTickedCount).toBe(2);
   });
 
   it("should evict agents with 'insufficient production' state", () => {
-    const mockAgent1 = new Agent(100, recipe, market);
-    const mockAgent2 = new Agent(0, recipe, market);
+    const mockAgent1 = new Agent(recipe, market);
+    const mockAgent2 = new Agent(recipe, market);
 
     let agent1TickedCount = 0;
     mockAgent1.tick = () => agent1TickedCount++;
@@ -62,7 +68,7 @@ describe("Station", () => {
 
     mockAgent2.state = "insufficient production";
     station = new Station(market, [mockAgent1, mockAgent2], []);
-    station.tick();
+    station.tick(mockTick);
     expect(station["facilities"].map((f) => f.agent)).toEqual([
       mockAgent1,
       undefined,
@@ -71,7 +77,7 @@ describe("Station", () => {
     expect(agent2TickedCount).toBe(1);
 
     // Also check that the evicted agent does not tick.
-    station.tick();
+    station.tick(mockTick);
     expect(agent1TickedCount).toBe(2);
     expect(agent2TickedCount).toBe(1);
   });
@@ -85,7 +91,7 @@ describe("Station", () => {
     expect(station.facilities[0].agent).toBeUndefined();
 
     // Tick the station to trigger agent addition
-    station.tick();
+    station.tick(mockTick);
 
     // Check if a new agent was added to the facility
     expect(station.facilities.length).toBe(1);

@@ -4,7 +4,7 @@ import * as readline from "readline";
 import { getSeed } from "./util";
 import { GameLogEvent, GameState, ResourceID } from "./types";
 
-const MAX_GAME_FPS = 0.5;
+const MAX_GAME_FPS = 5;
 const MAX_UI_FPS = 20;
 
 let paused = true;
@@ -56,9 +56,13 @@ function updateUi() {
   resourceIds = Object.keys(state.resources) as ResourceID[];
 
   // Draw Dashboard
-  console.log(`=== PORT AUTHORITY (Tick: ${state.tickCount}) ===`);
+  console.log(
+    `=== PORT AUTHORITY (Day ${game.day()} ${game.hour()}:00, Tick: ${state.tickCount}) ===`,
+  );
   console.log(`Port Wealth: $${state.wealth.toFixed(2)}`);
-  console.log(`Port Pop: ${state.population.toFixed(0)}`);
+  console.log(
+    `Port Pop: ${state.population.toFixed(0)} ${state.starvingPopulation > 0 ? `(${state.starvingPopulation.toFixed(0)} hungry, unable to work)` : ""}`,
+  );
   console.log(`-------------------------------------------`);
 
   const selectedResource = resourceIds[selectedResourceIndex] as ResourceID;

@@ -10,12 +10,13 @@ import {
   GameTickListener,
   MerchantDef,
   RecipeDef,
+  Tick,
 } from "./types";
 import { getSeededRandom, Logger } from "./util";
 
 const MAX_EVENT_HISTORY = 3;
-const MERCHANT_TICK_INTERVAL = 5;
-const MERCHANT_TICK_DURATION = 10;
+const MERCHANT_TICK_INTERVAL = 24;
+const MERCHANT_TICK_DURATION = 1;
 
 // TODOs:
 // - player can set tarrifs / subsidies
@@ -46,12 +47,17 @@ export class Game extends Logger {
   public tick() {
     // Logs maintenance.
     this.log(`\n~~ Tick ${this.tickCount} ~~`);
+    const tick: Tick = {
+      tickCount: this.tickCount,
+      hour: this.hour,
+      day: this.day,
+    };
 
     // Update merchants.
     this.updateMerchants();
 
     // Run the sim.
-    this.station.tick();
+    this.station.tick(tick);
 
     this.print();
 
@@ -65,10 +71,19 @@ export class Game extends Logger {
     this.subscribers.push(listener);
   }
 
+  public hour(): number {
+    return Math.floor(this.tickCount % 24);
+  }
+
+  public day(): number {
+    return Math.floor(this.tickCount / 24) + 1;
+  }
+
   private notifyListeners() {
     const state: GameState = {
       tickCount: this.tickCount,
       population: this.station.population,
+      starvingPopulation: this.station.starvingPopulation,
       wealth: this.station.market.wealth,
       resources: {},
     };

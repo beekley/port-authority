@@ -57,6 +57,7 @@ export interface MerchantDef {
 export interface GameState {
   tickCount: number;
   population: Quantity;
+  starvingPopulation: Quantity;
   wealth: Price;
   resources: Record<
     string,
@@ -78,3 +79,9 @@ export interface GameLogEvent {
 }
 
 export type GameTickListener = (state: GameState, logs: GameLogEvent[]) => void;
+
+export interface Tick {
+  tickCount: number;
+  hour(): number;
+  day(): number;
+}

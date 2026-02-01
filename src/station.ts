@@ -1,9 +1,14 @@
 import { Agent } from "./agent";
 import { GlobalMarket, profitability } from "./market";
-import { RecipeDef } from "./types";
+import { Quantity, RecipeDef, Tick } from "./types";
 import { Logger } from "./util";
 
-const DAILY_FOOD_CONSUMPTION = 1.7; // kg/day/person.
+// kg/day/person
+const HOURLY_FOOD_CONSUMPTION: Record<number, Quantity> = {
+  8: 0.4,
+  12: 0.6,
+  18: 0.7,
+};
 
 interface Facility {
   agent?: Agent;
@@ -12,8 +17,9 @@ interface Facility {
 export class Station extends Logger {
   public readonly market: GlobalMarket;
   public readonly facilities: Facility[] = [];
-  public population: number = 100; // Initial population
   public readonly availableRecipes: RecipeDef[];
+  public population: number = 100; // Initial population
+  public starvingPopulation: number = 0;
 
   constructor(
     market: GlobalMarket,
@@ -39,7 +45,7 @@ export class Station extends Logger {
     this.availableRecipes = recipes;
   }
 
-  public tick() {
+  public tick(tick: Tick) {
     // Let agents do their work first.
     for (const facility of this.facilities) {
       if (!facility.agent) continue;
@@ -52,7 +58,7 @@ export class Station extends Logger {
     }
 
     // Consume food.
-    this.consumeFood();
+    this.consumeFood(tick.hour());
 
     // Manage facilities
 
@@ -72,21 +78,28 @@ export class Station extends Logger {
   }
 
   // Basic linear consumption of food.
-  // TODO: vary the consumption rate.
-  private consumeFood() {
+  private consumeFood(hour: number) {
     const foodMarket = this.market.resourceMarkets.get("food");
     if (!foodMarket) {
       this.log(`No food market!`);
       return;
     }
-    const foodConsumption = Math.floor(
-      (this.population * DAILY_FOOD_CONSUMPTION) / 24,
+    const neededFood = Math.floor(
+      this.population * (HOURLY_FOOD_CONSUMPTION[Math.round(hour)] || 0),
     );
-    // TODO: where does this money come from? Maybe per agent?
-    const transaction = foodMarket.consumeFromMarket(foodConsumption);
-    if (transaction.quantity < foodConsumption) {
-      this.log(`Starvation! Could only get ${transaction.quantity} food`);
-      this.population *= 0.9; // Simulate population decline
+    if (Math.floor(neededFood) == 0) return;
+    const availableFood = foodMarket.stock;
+    const transaction = foodMarket.consumeFromMarket(
+      availableFood >= neededFood ? neededFood : availableFood,
+    );
+    this.log(`Consuming ${transaction.quantity} / ${neededFood} food.`);
+    if (transaction.quantity < neededFood) {
+      this.starvingPopulation = Math.floor(
+        this.population * (1 - transaction.quantity / neededFood),
+      );
+      this.log(
+        `Starvation! Could only get ${transaction.quantity} of the ${neededFood} needed food. ${this.starvingPopulation} of ${this.population} is starving.`,
+      );
     }
     this.log(
       `Consumed ${transaction.quantity} food. Population: ${this.population}`,
