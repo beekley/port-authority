@@ -1,8 +1,8 @@
 // CLI
-import { Game } from "./game";
+import { Game } from "../game";
 import * as readline from "readline";
-import { getSeed } from "./util";
-import { GameLogEvent, GameState, ResourceID } from "./types";
+import { getSeed } from "../util";
+import { GameLogEvent, GameState, ResourceID } from "../types";
 
 const MAX_GAME_FPS = 5;
 const MAX_UI_FPS = 20;

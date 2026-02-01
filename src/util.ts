@@ -1,5 +1,13 @@
-import { env } from "process";
 import * as fs from "fs";
+
+let env: NodeJS.ProcessEnv = {};
+const isNode =
+  typeof process !== "undefined" &&
+  process.versions != null &&
+  process.versions.node != null;
+if (isNode) {
+  env = process.env;
+}
 
 export const SILENT = "silent";
 export const FILE = "file";
@@ -28,7 +36,7 @@ export class Logger {
 
     const now = new Date();
 
-    const dir = `${process.cwd()}/logs`;
+    const dir = "./logs"; // `${process.cwd()}/logs`;
     this.filePath = `${dir}/log_${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${now.getHours()}-${now.getMinutes()}.txt`;
 
     if (env.LOGGING === FILE && !fs.existsSync(dir)) {

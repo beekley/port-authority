@@ -28,7 +28,7 @@ export class Game extends Logger {
     merchant: Merchant;
   }[] = [];
 
-  private tickCount = 0;
+  public tickCount = 0;
   private readonly seed: number;
   private subscribers: GameTickListener[] = [];
   // Ring buffer
