@@ -9,8 +9,7 @@ if (isNode) {
   env = process.env;
 }
 
-export const SILENT = "silent";
-export const FILE = "file";
+// LOGGING constants moved to logging.ts
 
 export function getSeed(): number {
   return Math.floor(Math.random() * 10 * 1000);
@@ -21,44 +20,18 @@ export function getSeededRandom<T>(
   tickCount: number,
   values: T[],
 ): T {
-  const diceroll = tickCount * seed;
+  const diceroll = Math.floor(mulberry32(tickCount + seed)() * 10000);
   return structuredClone(values[diceroll % values.length]);
 }
 
-export class Logger {
-  public readonly id: string;
-  private noPrefix: boolean;
-  private filePath: string;
+// Logger removed. Use src/logging.ts instead.
 
-  constructor(noPrefix: boolean = false) {
-    this.id = crypto.randomUUID().split("-").pop() || "";
-    this.noPrefix = noPrefix;
-
-    const now = new Date();
-
-    const dir = "./logs"; // `${process.cwd()}/logs`;
-    this.filePath = `${dir}/log_${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${now.getHours()}-${now.getMinutes()}.txt`;
-
-    if (env.LOGGING === FILE && !fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-  }
-
-  log(message: string) {
-    if (env.LOGGING === SILENT) return;
-
-    const prefix = `[${this.constructor.name} - ${this.id}]`;
-    if (!this.noPrefix) {
-      message = `${prefix} ${message}`;
-    }
-
-    if (env.LOGGING === FILE) {
-      fs.appendFile(this.filePath, message + "\n", (err: any) => {
-        if (err) throw err;
-      });
-      return;
-    }
-
-    console.log(message);
-  }
+// PRNG
+function mulberry32(seed: number): () => number {
+  return function () {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }

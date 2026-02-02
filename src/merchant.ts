@@ -1,9 +1,10 @@
 import { GlobalMarket } from "./market";
 import { ResourceID, Quantity, Price, Transaction, Fraction } from "./types";
-import { Logger } from "./util";
+import { DebugLogger } from "./logging";
 
 // Merchants arrive at port and decide to sell or buy if prices meet their expectations.
-export class Merchant extends Logger {
+export class Merchant {
+  private debug: DebugLogger;
   public name: string;
   public wealth: Price;
   public readonly cargo: Map<ResourceID, Quantity>;
@@ -19,8 +20,8 @@ export class Merchant extends Logger {
     profitMargin: Fraction,
     market: GlobalMarket,
   ) {
-    super();
     this.name = name;
+    this.debug = new DebugLogger(name);
     this.wealth = initialWealth;
     this.market = market;
     this.cargo = new Map(cargo);
@@ -31,12 +32,12 @@ export class Merchant extends Logger {
   public tick() {
     for (const resourceId of this.cargo.keys()) {
       if ((this.cargo.get(resourceId) || 0) > 0) {
-        this.log(`Merchant selling ${resourceId}`);
+        this.debug.log(`Merchant selling ${resourceId}`);
         this.sell(resourceId);
       }
     }
     for (const resourceId of this.wantsToBuy) {
-      this.log(`Merchant buying ${resourceId}`);
+      this.debug.log(`Merchant buying ${resourceId}`);
       this.buy(resourceId);
     }
   }
@@ -53,7 +54,7 @@ export class Merchant extends Logger {
     this.wealth += transaction.totalPrice;
     this.cargo.set(resourceId, cargoQuantity - transaction.quantity);
     if (transaction.quantity > 0) {
-      this.log(
+      this.debug.log(
         `Merchant sold ${transaction.quantity} ${resourceId} for ${transaction.totalPrice.toFixed(2)}`,
       );
     }
@@ -77,7 +78,7 @@ export class Merchant extends Logger {
       this.wealth -= transaction.totalPrice;
       const currentCargo = this.cargo.get(resourceId) || 0;
       this.cargo.set(resourceId, currentCargo + transaction.quantity);
-      this.log(
+      this.debug.log(
         `Merchant bought ${transaction.quantity} ${resourceId} for ${transaction.totalPrice.toFixed(2)}`,
       );
       return transaction;

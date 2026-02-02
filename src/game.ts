@@ -8,20 +8,25 @@ import {
   GameLogEvent,
   GameState,
   GameTickListener,
+  LogSource,
   MerchantDef,
   RecipeDef,
   Tick,
 } from "./types";
-import { getSeededRandom, Logger } from "./util";
+import { getSeededRandom } from "./util";
+import { DebugLogger, EventLogger } from "./logging";
 
 const MAX_EVENT_HISTORY = 3;
 const MERCHANT_TICK_INTERVAL = 24;
-const MERCHANT_TICK_DURATION = 1;
+const MERCHANT_TICK_DURATION = 5;
 
 // TODOs:
 // - player can set tarrifs / subsidies
 // - player can set max import quantity
-export class Game extends Logger {
+export class Game {
+  public readonly debug: DebugLogger;
+  public readonly events: EventLogger;
+
   public readonly station: Station;
   public readonly visitingMerchants: {
     sinceTick: number;
@@ -35,8 +40,9 @@ export class Game extends Logger {
   private eventLogs: GameLogEvent[] = [];
 
   constructor(seed: number) {
-    super(true);
     this.seed = seed;
+    this.debug = new DebugLogger("Game");
+    this.events = new EventLogger();
 
     const market: GlobalMarket = getCompleteMarket();
     const recipes: RecipeDef[] = recipeDefs;
@@ -46,7 +52,7 @@ export class Game extends Logger {
 
   public tick() {
     // Logs maintenance.
-    this.log(`\n~~ Tick ${this.tickCount} ~~`);
+    this.debug.log(`\n~~ Tick ${this.tickCount} ~~`);
     const tick: Tick = {
       tickCount: this.tickCount,
       hour: this.hour,
@@ -108,14 +114,6 @@ export class Game extends Logger {
     }
   }
 
-  private addGameEvent(event: GameLogEvent) {
-    if (this.eventLogs.length >= MAX_EVENT_HISTORY) {
-      this.eventLogs.pop();
-    }
-    event.timestamp = this.tickCount.toString();
-    this.eventLogs.unshift(event);
-  }
-
   private updateMerchants() {
     // Get the most recent tick that had a new merchant
     let lastTickWithMerchant = 0;
@@ -145,10 +143,10 @@ export class Game extends Logger {
         sinceTick: this.tickCount,
         merchant,
       });
-      this.addGameEvent({
-        type: "SHIP_ARRIVAL",
-        message: `${merchant.name} arrived with ${merchant.wealth.toFixed(2)} wealth`,
-      });
+      this.events.log(
+        LogSource.MERCHANT,
+        `${merchant.name} arrived with ${merchant.wealth.toFixed(2)} wealth`,
+      );
     }
 
     for (const { sinceTick, merchant } of this.visitingMerchants) {
@@ -166,31 +164,31 @@ export class Game extends Logger {
   }
 
   private print() {
-    this.log(`Tick ${this.tickCount} summary`);
-    this.log(` Market:`);
-    this.log(`  - Wealth: ${this.station.market.wealth.toFixed(2)}`);
+    this.debug.log(`Tick ${this.tickCount} summary`);
+    this.debug.log(` Market:`);
+    this.debug.log(`  - Wealth: ${this.station.market.wealth.toFixed(2)}`);
     for (const [
       resourceId,
       market,
     ] of this.station.market.resourceMarkets.entries()) {
-      this.log(
-        `  - [${market.id}] ${resourceId}: ${market.stock.toFixed(0)} in stock, ${market.price.toFixed(2)} per unit`,
+      this.debug.log(
+        `  - [${market.resourceId}] ${resourceId}: ${market.stock.toFixed(0)} in stock, ${market.price.toFixed(2)} per unit`,
       );
     }
-    this.log(` Agents:`);
+    this.debug.log(` Agents:`);
     for (const facility of this.station.facilities) {
       if (facility.agent) {
         const agent = facility.agent;
-        this.log(
+        this.debug.log(
           `  - [${agent.id}] ${agent.recipe.displayName}, ${agent.state}`,
         );
       } else {
-        this.log(`  - No agent`);
+        this.debug.log(`  - No agent`);
       }
     }
-    this.log(` Recipes:`);
+    this.debug.log(` Recipes:`);
     for (const recipe of this.station.availableRecipes) {
-      this.log(
+      this.debug.log(
         `  - ${recipe.displayName}: ${profitability(this.station.market, recipe).toFixed(2)} profit`,
       );
     }

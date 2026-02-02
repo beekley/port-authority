@@ -1,13 +1,16 @@
 import { GlobalMarket } from "./market";
 import { Price, Quantity, RecipeDef, ResourceID, Transaction } from "./types";
-import { Logger } from "./util";
+import { DebugLogger } from "./logging";
 
 const MAX_TICKS_WITHOUT_PRODUCTION = 5;
 
 export type State = "producing" | "insufficient production";
 
 // The thing that takes in resources and ouputs resources
-export class Agent extends Logger {
+export class Agent {
+  public readonly id: string;
+  private debug: DebugLogger;
+
   // Variables
   public state: State = "producing";
   private readonly storage: Map<ResourceID, Quantity> = new Map();
@@ -18,7 +21,8 @@ export class Agent extends Logger {
   private readonly market: GlobalMarket;
 
   constructor(productionRecipe: RecipeDef, market: GlobalMarket) {
-    super();
+    this.id = crypto.randomUUID().split("-").pop() || "";
+    this.debug = new DebugLogger(this.id);
     this.recipe = productionRecipe;
     this.market = market;
   }
@@ -53,19 +57,19 @@ export class Agent extends Logger {
       const storedQuantity = this.storage.get(resourceId) || 0;
       const market = this.market.resourceMarkets.get(resourceId);
       if (!market) {
-        this.log(`Agent could not sell ${resourceId}: no market`);
+        this.debug.log(`Agent could not sell ${resourceId}: no market`);
         continue;
       }
       const transaction = market.giveToMarket(storedQuantity);
       soldQuantity += transaction.quantity;
       this.storage.set(resourceId, storedQuantity - transaction.quantity);
-      this.log(`Gave ${transaction.quantity} ${resourceId} to market.`);
+      this.debug.log(`Gave ${transaction.quantity} ${resourceId} to market.`);
     }
 
     // Check if there was no production.
 
     if (maxProductionQuantity === 0 && soldQuantity === 0) {
-      this.log(
+      this.debug.log(
         `No production (${this.ticksWithoutProduction} / ${MAX_TICKS_WITHOUT_PRODUCTION} ticks without production).`,
       );
       this.ticksWithoutProduction++;
@@ -94,7 +98,7 @@ export class Agent extends Logger {
     for (const [resourceId, outputQuantity] of recipe.outputs) {
       const storedQuantity = this.storage.get(resourceId) || 0;
       this.storage.set(resourceId, storedQuantity + outputQuantity);
-      this.log(
+      this.debug.log(
         `Produced ${outputQuantity} ${resourceId} (${recipe.displayName})`,
       );
     }
@@ -103,12 +107,12 @@ export class Agent extends Logger {
   private buyResource(resourceId: ResourceID, quantity: number): Transaction {
     const resourceMarket = this.market.resourceMarkets.get(resourceId);
     if (!resourceMarket) {
-      this.log(`Agent could not buy ${quantity} ${resourceId}: no market`);
+      this.debug.log(`Agent could not buy ${quantity} ${resourceId}: no market`);
       return { resourceId, quantity: 0, totalPrice: 0 };
     }
     const transaction = resourceMarket.consumeFromMarket(quantity);
     if (transaction.quantity > 0) {
-      this.log(
+      this.debug.log(
         `Agent consumed ${transaction.quantity} ${resourceId} for ${transaction.totalPrice.toFixed(2)} (full order)`,
       );
     }
@@ -121,11 +125,11 @@ export class Agent extends Logger {
       const storedQuantity = this.storage.get(resourceId) || 0;
       const market = this.market.resourceMarkets.get(resourceId);
       if (!market) {
-        this.log(`Agent could not sell ${resourceId}: no market`);
+        this.debug.log(`Agent could not sell ${resourceId}: no market`);
         continue;
       }
       const transaction = market.giveToMarket(storedQuantity);
     }
-    this.log(`Agent ready for eviction`);
+    this.debug.log(`Agent ready for eviction`);
   }
 }

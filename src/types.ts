@@ -72,9 +72,17 @@ export interface GameState {
   >;
 }
 
+// TODO: Refine these sources as needed.
+export enum LogSource {
+  SYSTEM = "SYSTEM",
+  MARKET = "MARKET",
+  MERCHANT = "MERCHANT",
+  POPULATION = "POPULATION",
+  AGENT = "AGENT",
+}
+
 export interface GameLogEvent {
-  type: "SHIP_ARRIVAL" | "AGENT_EVICTION" | "AGENT_ADDITION" | "POP_LOSS";
-  timestamp?: string;
+  source: LogSource;
   message: string;
 }
 

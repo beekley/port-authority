@@ -1,7 +1,7 @@
 import { Agent } from "./agent";
 import { GlobalMarket, profitability } from "./market";
 import { Quantity, RecipeDef, Tick } from "./types";
-import { Logger } from "./util";
+import { DebugLogger } from "./logging";
 
 // kg/day/person
 const HOURLY_FOOD_CONSUMPTION: Record<number, Quantity> = {
@@ -14,7 +14,8 @@ interface Facility {
   agent?: Agent;
 }
 
-export class Station extends Logger {
+export class Station {
+  private debug: DebugLogger = new DebugLogger("Station");
   public readonly market: GlobalMarket;
   public readonly facilities: Facility[] = [];
   public readonly availableRecipes: RecipeDef[];
@@ -27,7 +28,6 @@ export class Station extends Logger {
     recipes: RecipeDef[],
     size = agents.length,
   ) {
-    super();
     // Starting values for test / debug.
     this.market = market;
 
@@ -81,7 +81,7 @@ export class Station extends Logger {
   private consumeFood(hour: number) {
     const foodMarket = this.market.resourceMarkets.get("food");
     if (!foodMarket) {
-      this.log(`No food market!`);
+      this.debug.log(`No food market!`);
       return;
     }
     const neededFood = Math.floor(
@@ -92,16 +92,16 @@ export class Station extends Logger {
     const transaction = foodMarket.consumeFromMarket(
       availableFood >= neededFood ? neededFood : availableFood,
     );
-    this.log(`Consuming ${transaction.quantity} / ${neededFood} food.`);
+    this.debug.log(`Consuming ${transaction.quantity} / ${neededFood} food.`);
     if (transaction.quantity < neededFood) {
       this.starvingPopulation = Math.floor(
         this.population * (1 - transaction.quantity / neededFood),
       );
-      this.log(
+      this.debug.log(
         `Starvation! Could only get ${transaction.quantity} of the ${neededFood} needed food. ${this.starvingPopulation} of ${this.population} is starving.`,
       );
     }
-    this.log(
+    this.debug.log(
       `Consumed ${transaction.quantity} food. Population: ${this.population}`,
     );
   }

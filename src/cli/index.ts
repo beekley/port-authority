@@ -42,9 +42,13 @@ process.stdin.on("keypress", (_, key) => {
 });
 
 // 2. Setup Output (Subscription)
-game.subscribe((state, logs) => {
+game.subscribe((state, _) => {
   gameState = state;
-  gameLogs = logs;
+  // gameLogs = logs;
+});
+
+game.events.subscribe((event) => {
+  gameLogs.push(event);
 });
 
 function updateUi() {
@@ -81,7 +85,7 @@ function updateUi() {
   // Draw Event Log
   console.log(`\n--- LOG ---`);
   logs.forEach((log) =>
-    console.log(`> [tick ${log.timestamp}] [${log.type}] ${log.message}`),
+    console.log(`> [tick ${log.timestamp}] [${log.source}] ${log.message}`),
   );
 }
 

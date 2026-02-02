@@ -1,3 +1,4 @@
+<!-- TODO: Split into components -->
 <template>
   <div id="app">
     <h1>Port Authority</h1>
@@ -56,30 +57,65 @@
 
     <hr />
 
-    <!-- <h2>Log</h2>
+    <h2>Visiting Merchants</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Merchant</th>
+          <th>Cargo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="{ merchant } in game.visitingMerchants" :key="merchant.name">
+          <MerchantRow :merchant="merchant as Merchant" />
+        </tr>
+        <tr v-if="game.visitingMerchants.length === 0">
+          <td colspan="5">No merchants currently visiting.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr />
+
+    <h2>Log</h2>
     <ul>
-      <li v-for="log in logs" :key="log.timestamp">
-        [tick {{ log.timestamp }}] [{{ log.type }}] {{ log.message }}
+      <li v-for="(log, i) in reversedLogs" :key="i">
+        {{ log.message }}
       </li>
-    </ul> -->
+    </ul>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { Game } from "../game";
 import { getSeed } from "../util";
-import { ResourceID } from "../types";
+import { GameLogEvent, ResourceID } from "../types";
+import MerchantRow from "./MerchantRow.vue";
+import { Merchant } from "../merchant";
 
 const MAX_GAME_FPS = 5;
 const game = ref(new Game(getSeed()));
+const logs = ref<GameLogEvent[]>([]);
 let paused = ref(true);
+
+const reversedLogs = computed(() => {
+  return [...logs.value].reverse();
+});
 
 function togglePlay() {
   paused.value = !paused.value;
 }
 
 function startGame() {
+  game.value.events.subscribe((event) => {
+    logs.value.push(event);
+    // Optional: limit log size
+    if (logs.value.length > 50) {
+      logs.value.shift();
+    }
+  });
+
   setInterval(() => {
     if (!paused.value) {
       game.value.tick();
@@ -96,6 +132,13 @@ function toggleAllow(resourceId: ResourceID, direction: "import" | "export") {
     market.tradePolicy.exportForbidden = !market.tradePolicy.exportForbidden;
   }
 }
+
+watch(
+  () => game.value.visitingMerchants,
+  (newMerchants, oldMerchants) => {
+    console.log("BRETT", newMerchants);
+  },
+);
 
 startGame();
 </script>

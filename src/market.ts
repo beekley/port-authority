@@ -8,7 +8,7 @@ import {
   TradePolicy,
   Transaction,
 } from "./types";
-import { Logger } from "./util";
+import { DebugLogger } from "./logging";
 
 const PRICE_INCREASE_FRACTION = 0.2;
 
@@ -40,7 +40,8 @@ export function profitability(market: GlobalMarket, recipe: RecipeDef): number {
 }
 
 // Sets the current price for a resource
-export class ResourceMarket extends Logger {
+export class ResourceMarket {
+  private debug: DebugLogger;
   public readonly resourceId: ResourceID;
   public stock: Quantity = 0;
   public price: Price; // Do not set except within this class
@@ -57,8 +58,8 @@ export class ResourceMarket extends Logger {
     initialPrice: Price,
     market: GlobalMarket,
   ) {
-    super();
     this.resourceId = resourceId;
+    this.debug = new DebugLogger(resourceId);
     this.price = initialPrice;
     this.globalMarket = market;
   }
@@ -172,7 +173,7 @@ export class ResourceMarket extends Logger {
       this.price *= 1 - PRICE_INCREASE_FRACTION;
     }
 
-    this.log(
+    this.debug.log(
       `Price for ${this.resourceId}: ${oldPrice.toFixed(2)} -> ${this.price.toFixed(2)}.`,
     );
 

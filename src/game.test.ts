@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Game } from "./game";
 import { env, memoryUsage } from "process";
-import { SILENT } from "./util";
+import { SILENT } from "./logging";
 
 describe("Game", () => {
   it("should tick the game and increase the tick count", () => {
