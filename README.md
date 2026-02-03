@@ -4,8 +4,17 @@ This is a simulation game / recreational software where you play as the Port Aut
 
 ## TODO
 
+### Vertical slice
+
+- Graph of status
+- Show agents / facilities
+- Show transactions (esp with merchants)
+- Set speed
+- Fail state and restart
+
+### Features
+
 - Agents require pop and energy
 - Mechanism to add facilities
 - Mechanism to add /remove pop
 - Add more content
-- Build web UI

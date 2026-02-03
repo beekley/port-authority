@@ -18,6 +18,7 @@
       <button @click="togglePlay">
         {{ paused ? "Start" : "Pause" }}
       </button>
+      <button @click="toggleSpeed">{{ gameSpeed }}x</button>
     </div>
 
     <hr />
@@ -94,9 +95,10 @@ import { GameLogEvent, ResourceID } from "../types";
 import MerchantRow from "./MerchantRow.vue";
 import { Merchant } from "../merchant";
 
-const MAX_GAME_FPS = 5;
+const MAX_GAME_FPS = 8;
 const game = ref(new Game(getSeed()));
 const logs = ref<GameLogEvent[]>([]);
+let gameSpeed = ref<"0.5" | "1" | "2" | "4" | "8">("1");
 let paused = ref(true);
 
 const reversedLogs = computed(() => {
@@ -105,6 +107,20 @@ const reversedLogs = computed(() => {
 
 function togglePlay() {
   paused.value = !paused.value;
+}
+
+function toggleSpeed() {
+  if (gameSpeed.value === "0.5") {
+    gameSpeed.value = "1";
+  } else if (gameSpeed.value === "1") {
+    gameSpeed.value = "2";
+  } else if (gameSpeed.value === "2") {
+    gameSpeed.value = "4";
+  } else if (gameSpeed.value === "4") {
+    gameSpeed.value = "8";
+  } else if (gameSpeed.value === "8") {
+    gameSpeed.value = "0.5";
+  }
 }
 
 function startGame() {
@@ -116,10 +132,24 @@ function startGame() {
     }
   });
 
+  let i = 0;
   setInterval(() => {
     if (!paused.value) {
-      game.value.tick();
+      // These values assume MAX_GAME_FPS = 8
+      if (gameSpeed.value === "8") {
+        game.value.tick();
+      } else if (gameSpeed.value === "4" && i % 2 === 0) {
+        game.value.tick();
+      } else if (gameSpeed.value === "2" && i % 4 === 0) {
+        game.value.tick();
+      } else if (gameSpeed.value === "1" && i % 8 === 0) {
+        game.value.tick();
+      } else if (gameSpeed.value === "0.5" && i % 16 === 0) {
+        game.value.tick();
+      }
     }
+    i++;
+    i = i % (MAX_GAME_FPS * 2);
   }, 1000 / MAX_GAME_FPS);
 }
 
