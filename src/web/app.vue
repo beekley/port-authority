@@ -125,6 +125,7 @@ function toggleSpeed() {
 
 function startGame() {
   game.value.events.subscribe((event) => {
+    event.message = `[Day ${game.value.day()}] ${event.message}`;
     logs.value.push(event);
     // Optional: limit log size
     if (logs.value.length > 50) {

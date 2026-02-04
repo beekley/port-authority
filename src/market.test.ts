@@ -22,43 +22,61 @@ describe("ResourceMarket", () => {
   });
 
   it("should decrease stock and increase consumption count when buying from market", () => {
-    market.sellToMarket(100);
-    market.buyFromMarket(30);
+    // Market buys from merchant (Import) -> stock increases
+    market.executePurchase(100, market.price);
+    // Market sells to merchant (Export) -> stock decreases
+    market.executeSale(30, market.price);
     expect(market.stock).toBe(70);
+  });
+
+  it("should only buy what the global market can afford", () => {
+    const globalMarket = new GlobalMarket();
+    globalMarket.wealth = 150; // Can only afford 1.5 units at price 100
+    const poorMarket = new ResourceMarket(
+      resourceId,
+      initialPrice,
+      globalMarket,
+    );
+
+    // Market Purchase (Import)
+    const tx = poorMarket.executePurchase(10, initialPrice);
+
+    expect(tx.quantity).toBe(1);
+    expect(tx.totalPrice).toBe(100);
+    expect(globalMarket.wealth).toBe(50);
+    expect(poorMarket.stock).toBe(1);
   });
 
   it("should increase the price when consumption is greater than production", () => {
     // Prefill the stock.
-    market.sellToMarket(50);
+    market.executePurchase(50, market.price);
     market.tick();
     const oldPrice = market.price;
 
-    market.sellToMarket(50);
-    market.buyFromMarket(60);
+    market.executePurchase(50, market.price);
+    market.executeSale(60, market.price);
     market.tick();
     expect(market.price).toBeGreaterThan(oldPrice);
   });
 
   it("should decrease the price when production is greater than consumption", () => {
-    market.sellToMarket(60);
-    market.buyFromMarket(50);
+    market.executePurchase(60, market.price);
+    market.executeSale(50, market.price);
     market.tick();
     expect(market.price).toBeLessThan(initialPrice);
   });
 
   it("should not change the price when production and consumption are equal", () => {
-    market.sellToMarket(50);
-    market.buyFromMarket(50);
+    market.executePurchase(50, market.price);
+    market.executeSale(50, market.price);
     market.tick();
     expect(market.price).toBe(initialPrice);
   });
 
-
-
   describe("TradePolicy", () => {
     it("should forbid imports", () => {
       market.tradePolicy.importForbidden = true;
-      const tx = market.sellToMarket(10, 1);
+      const tx = market.executePurchase(10, market.price);
       expect(tx.quantity).toBe(0);
       expect(tx.totalPrice).toBe(0);
     });
@@ -67,7 +85,7 @@ describe("ResourceMarket", () => {
       market.tradePolicy.exportForbidden = true;
       // Stock up first
       market.stock = 100;
-      const tx = market.buyFromMarket(10, 1);
+      const tx = market.executeSale(10, market.price);
       expect(tx.quantity).toBe(0);
       expect(tx.totalPrice).toBe(0);
     });
@@ -75,7 +93,7 @@ describe("ResourceMarket", () => {
     it("should apply import price modifier", () => {
       market.tradePolicy.importPriceModifier = 0.5; // +50%
       // Base price 100 * 1.5 = 150
-      const tx = market.sellToMarket(10, 1);
+      const tx = market.executePurchase(10, market.price);
       expect(tx.totalPrice).toBe(1500);
     });
 
@@ -83,7 +101,7 @@ describe("ResourceMarket", () => {
       market.tradePolicy.exportPriceModifier = -0.5; // -50%
       // Base price 100 * 0.5 = 50
       market.stock = 100;
-      const tx = market.buyFromMarket(10, 1);
+      const tx = market.executeSale(10, market.price);
       expect(tx.totalPrice).toBe(500);
     });
   });

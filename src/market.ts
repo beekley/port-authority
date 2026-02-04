@@ -64,9 +64,10 @@ export class ResourceMarket {
     this.globalMarket = market;
   }
 
-  public sellToMarket(
+  // Market is BUYING from a seller (Importing)
+  public quotePurchase(
     quantity: Quantity,
-    priceMultiplier: number = 1,
+    proposedUnitPrice: Price,
   ): Transaction {
     if (this.tradePolicy.importForbidden) {
       return {
@@ -76,30 +77,30 @@ export class ResourceMarket {
       };
     }
 
-    // Sell to the market as much as the global market can afford.
+    // Apply policy to the proposed price
     const policyMultiplier = 1 + (this.tradePolicy.importPriceModifier || 0);
-    const unitPrice = this.price * priceMultiplier * policyMultiplier;
+    const finalUnitPrice = proposedUnitPrice * policyMultiplier;
 
     // Check affordability
-    const maxAffordable = Math.floor(this.globalMarket.wealth / unitPrice);
-    const quantityToSell = Math.min(quantity, maxAffordable);
+    const maxAffordable = Math.floor(this.globalMarket.wealth / finalUnitPrice);
+    const quantityToBuy = Math.min(quantity, maxAffordable);
 
-    const totalPrice = unitPrice * quantityToSell;
-    this.globalMarket.wealth -= totalPrice;
-    this.tickProductionCount += quantityToSell;
-    this.stock += quantityToSell;
     return {
       resourceId: this.resourceId,
-      quantity: quantityToSell,
-      totalPrice,
+      quantity: quantityToBuy,
+      totalPrice: quantityToBuy * finalUnitPrice,
     };
   }
 
-  public buyFromMarket(
-    quantity: Quantity,
-    priceMultiplier: number = 1,
-  ): Transaction {
-    // Check trade policy
+  public commitPurchase(transaction: Transaction): void {
+    if (transaction.quantity <= 0) return;
+    this.globalMarket.wealth -= transaction.totalPrice;
+    this.tickProductionCount += transaction.quantity;
+    this.stock += transaction.quantity;
+  }
+
+  // Market is SELLING to a buyer (Exporting)
+  public quoteSale(quantity: Quantity, proposedUnitPrice: Price): Transaction {
     if (this.tradePolicy.exportForbidden) {
       return {
         resourceId: this.resourceId,
@@ -108,7 +109,6 @@ export class ResourceMarket {
       };
     }
 
-    // Check if enough in stock.
     if (this.stock < quantity) {
       return {
         resourceId: this.resourceId,
@@ -118,20 +118,35 @@ export class ResourceMarket {
     }
 
     const policyMultiplier = 1 + (this.tradePolicy.exportPriceModifier || 0);
-    const unitPrice = this.price * priceMultiplier * policyMultiplier;
+    const finalUnitPrice = proposedUnitPrice * policyMultiplier;
 
-    const totalPrice = unitPrice * quantity;
-    this.tickConsumptionCount += quantity;
-    this.stock -= quantity;
-    this.globalMarket.wealth += totalPrice;
     return {
       resourceId: this.resourceId,
       quantity,
-      totalPrice,
+      totalPrice: quantity * finalUnitPrice,
     };
   }
 
-  // Like buyFromMarket, but no money is exchanged.
+  public commitSale(transaction: Transaction): void {
+    if (transaction.quantity <= 0) return;
+    this.tickConsumptionCount += transaction.quantity;
+    this.stock -= transaction.quantity;
+    this.globalMarket.wealth += transaction.totalPrice;
+  }
+
+  public executePurchase(quantity: Quantity, proposedUnitPrice: Price): Transaction {
+    const tx = this.quotePurchase(quantity, proposedUnitPrice);
+    if (tx.quantity > 0) this.commitPurchase(tx);
+    return tx;
+  }
+
+  public executeSale(quantity: Quantity, proposedUnitPrice: Price): Transaction {
+    const tx = this.quoteSale(quantity, proposedUnitPrice);
+    if (tx.quantity > 0) this.commitSale(tx);
+    return tx;
+  }
+
+  // Like quoteSale + commitSale, but no money is exchanged.
   public consumeFromMarket(quantity: Quantity): Transaction {
     // Check if enough in stock.
     if (this.stock < quantity) {
@@ -151,7 +166,7 @@ export class ResourceMarket {
     };
   }
 
-  // Like sellToMarket, but no money is exchanged.
+  // Like quotePurchase + commitPurchase, but no money is exchanged.
   public giveToMarket(quantity: Quantity): Transaction {
     this.tickProductionCount += quantity;
     this.stock += quantity;

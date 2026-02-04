@@ -16,9 +16,9 @@ describe("Merchant", () => {
     foodMarket = new ResourceMarket("food", 15, market);
     waterMarket = new ResourceMarket("clean water", 5, market);
     market.resourceMarkets.set("food", foodMarket);
-    foodMarket.sellToMarket(10);
+    foodMarket.executePurchase(10, 15);
     market.resourceMarkets.set("clean water", waterMarket);
-    waterMarket.sellToMarket(10);
+    waterMarket.executePurchase(10, 5);
   });
 
   // Parameterized tests.

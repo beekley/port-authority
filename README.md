@@ -8,8 +8,7 @@ This is a simulation game / recreational software where you play as the Port Aut
 
 - Graph of status
 - Show agents / facilities
-- Show transactions (esp with merchants)
-- Set speed
+- Show transactions
 - Fail state and restart
 
 ### Features

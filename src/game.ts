@@ -16,9 +16,8 @@ import {
 import { getSeededRandom } from "./util";
 import { DebugLogger, EventLogger } from "./logging";
 
-const MAX_EVENT_HISTORY = 3;
 const MERCHANT_TICK_INTERVAL = 24;
-const MERCHANT_TICK_DURATION = 5;
+const MERCHANT_TICK_DURATION = 1;
 
 // TODOs:
 // - player can set tarrifs / subsidies
@@ -139,6 +138,9 @@ export class Game {
         merchantDef.profitMargin,
         this.station.market,
       );
+      merchant.events.subscribe(({ source, message }) => {
+        this.events.log(source, message);
+      });
       this.visitingMerchants.push({
         sinceTick: this.tickCount,
         merchant,
