@@ -1,10 +1,12 @@
 <template>
-  <td>{{ merchant.name }}</td>
-  <td>
-    <span v-for="[resourceId, count] in merchant.cargo"
-      >{{ resourceId.toUpperCase() }}: {{ count }}</span
-    >
-  </td>
+  <tr>
+    <td>{{ merchant.name }}</td>
+    <td>
+      <span v-for="[resourceId, count] in merchant.cargo"
+        >{{ resourceId.toUpperCase() }}: {{ count }}</span
+      >
+    </td>
+  </tr>
 </template>
 
 <script lang="ts">
@@ -18,9 +20,5 @@ export default defineComponent({
       required: true,
     },
   },
-  // setup(props) {
-  //   const { merchant } = props;
-  //   return {};
-  // },
 });
 </script>

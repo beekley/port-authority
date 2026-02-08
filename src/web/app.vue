@@ -35,24 +35,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr
+        <ResourceRow
+          :market="market as ResourceMarket"
           v-for="[resourceId, market] in game.station.market.resourceMarkets"
           :key="resourceId"
-        >
-          <td>{{ resourceId.toUpperCase() }}</td>
-          <td>{{ market.stock.toFixed(0) }}</td>
-          <td>${{ market.price.toFixed(2) }}</td>
-          <td>
-            <button @click="toggleAllow(resourceId, 'import')">
-              {{ market.tradePolicy.importForbidden ? "Banned" : "Allowed" }}
-            </button>
-          </td>
-          <td>
-            <button @click="toggleAllow(resourceId, 'export')">
-              {{ market.tradePolicy.exportForbidden ? "Banned" : "Allowed" }}
-            </button>
-          </td>
-        </tr>
+        />
       </tbody>
     </table>
 
@@ -67,9 +54,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="{ merchant } in game.visitingMerchants" :key="merchant.name">
-          <MerchantRow :merchant="merchant as Merchant" />
-        </tr>
+        <MerchantRow
+          :merchant="merchant as Merchant"
+          v-for="{ merchant } in game.visitingMerchants"
+          :key="merchant.name"
+        />
         <tr v-if="game.visitingMerchants.length === 0">
           <td colspan="5">No merchants currently visiting.</td>
         </tr>
@@ -94,6 +83,8 @@ import { getSeed } from "../util";
 import { GameLogEvent, ResourceID } from "../types";
 import MerchantRow from "./MerchantRow.vue";
 import { Merchant } from "../merchant";
+import ResourceRow from "./ResourceRow.vue";
+import { ResourceMarket } from "../market";
 
 const MAX_GAME_FPS = 8;
 const game = ref(new Game(getSeed()));
@@ -152,16 +143,6 @@ function startGame() {
     i++;
     i = i % (MAX_GAME_FPS * 2);
   }, 1000 / MAX_GAME_FPS);
-}
-
-function toggleAllow(resourceId: ResourceID, direction: "import" | "export") {
-  const market = game.value.station.market.resourceMarkets.get(resourceId);
-  if (!market) return;
-  if (direction === "import") {
-    market.tradePolicy.importForbidden = !market.tradePolicy.importForbidden;
-  } else if (direction === "export") {
-    market.tradePolicy.exportForbidden = !market.tradePolicy.exportForbidden;
-  }
 }
 
 watch(
