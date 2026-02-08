@@ -47,28 +47,14 @@ describe("ResourceMarket", () => {
     expect(poorMarket.stock).toBe(1);
   });
 
-  it("should increase the price when consumption is greater than production", () => {
-    // Prefill the stock.
+  it("should maintain constant price regardless of supply and demand", () => {
+    // High demand
     market.executePurchase(50, market.price);
     market.tick();
-    const oldPrice = market.price;
+    expect(market.price).toBe(initialPrice);
 
-    market.executePurchase(50, market.price);
+    // High supply
     market.executeSale(60, market.price);
-    market.tick();
-    expect(market.price).toBeGreaterThan(oldPrice);
-  });
-
-  it("should decrease the price when production is greater than consumption", () => {
-    market.executePurchase(60, market.price);
-    market.executeSale(50, market.price);
-    market.tick();
-    expect(market.price).toBeLessThan(initialPrice);
-  });
-
-  it("should not change the price when production and consumption are equal", () => {
-    market.executePurchase(50, market.price);
-    market.executeSale(50, market.price);
     market.tick();
     expect(market.price).toBe(initialPrice);
   });

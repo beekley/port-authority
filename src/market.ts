@@ -1,6 +1,5 @@
 import { resourceDefs } from "./market.data";
 import {
-  Fraction,
   Price,
   Quantity,
   RecipeDef,
@@ -9,8 +8,6 @@ import {
   Transaction,
 } from "./types";
 import { DebugLogger } from "./logging";
-
-const PRICE_INCREASE_FRACTION = 0.2;
 
 export class GlobalMarket {
   resourceMarkets: Map<ResourceID, ResourceMarket> = new Map();
@@ -134,13 +131,19 @@ export class ResourceMarket {
     this.globalMarket.wealth += transaction.totalPrice;
   }
 
-  public executePurchase(quantity: Quantity, proposedUnitPrice: Price): Transaction {
+  public executePurchase(
+    quantity: Quantity,
+    proposedUnitPrice: Price,
+  ): Transaction {
     const tx = this.quotePurchase(quantity, proposedUnitPrice);
     if (tx.quantity > 0) this.commitPurchase(tx);
     return tx;
   }
 
-  public executeSale(quantity: Quantity, proposedUnitPrice: Price): Transaction {
+  public executeSale(
+    quantity: Quantity,
+    proposedUnitPrice: Price,
+  ): Transaction {
     const tx = this.quoteSale(quantity, proposedUnitPrice);
     if (tx.quantity > 0) this.commitSale(tx);
     return tx;
@@ -178,21 +181,9 @@ export class ResourceMarket {
   }
 
   public tick() {
-    const oldPrice = this.price;
-    // Consumed more than made.
-    if (this.tickConsumptionCount > this.tickProductionCount) {
-      this.price *= 1 + PRICE_INCREASE_FRACTION;
-    }
-    // Made more than consumed.
-    else if (this.tickConsumptionCount < this.tickProductionCount) {
-      this.price *= 1 - PRICE_INCREASE_FRACTION;
-    }
-
-    this.debug.log(
-      `Price for ${this.resourceId}: ${oldPrice.toFixed(2)} -> ${this.price.toFixed(2)}.`,
-    );
-
-    // Reset tick.
+    // Price update logic removed as per design change.
+    // Price remains constant at initialPrice.
+    // We only reset the counters for statistical purposes.
     this.tickProductionCount = 0;
     this.tickConsumptionCount = 0;
   }

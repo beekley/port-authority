@@ -24,6 +24,30 @@ export function getSeededRandom<T>(
   return structuredClone(values[diceroll % values.length]);
 }
 
+export function getSeededWeightedRandom<T>(
+  seed: number,
+  tickCount: number,
+  values: T[],
+  weights: number[],
+): T {
+  if (values.length !== weights.length) {
+    throw new Error("Values and weights must have the same length");
+  }
+
+  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+  let randomValue = mulberry32(tickCount + seed)() * totalWeight;
+
+  for (let i = 0; i < weights.length; i++) {
+    randomValue -= weights[i];
+    if (randomValue <= 0) {
+      return structuredClone(values[i]);
+    }
+  }
+
+  // Fallback (should not happen unless all weights are 0)
+  return structuredClone(values[values.length - 1]);
+}
+
 // Logger removed. Use src/logging.ts instead.
 
 // PRNG

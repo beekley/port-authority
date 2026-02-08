@@ -13,7 +13,7 @@ import {
   RecipeDef,
   Tick,
 } from "./types";
-import { getSeededRandom } from "./util";
+import { getSeededWeightedRandom } from "./util";
 import { DebugLogger, EventLogger } from "./logging";
 
 const MERCHANT_TICK_INTERVAL = 24;
@@ -125,10 +125,39 @@ export class Game {
     // If it's time for a new merchant, add one
     // TODO: Check that there isn't a duplicate merchant, if we ever make them unique.
     if (this.tickCount - lastTickWithMerchant > MERCHANT_TICK_INTERVAL) {
-      const merchantDef = getSeededRandom<MerchantDef>(
+      const weights = merchantDefs.map((def) => {
+        let weight = 10; // Base weight
+
+        // Merchant selling to us (Importing)
+        // More subsidy (positive mod) = more attractive
+        for (const [resourceId] of def.cargo) {
+          const market = this.station.market.resourceMarkets.get(resourceId);
+          if (market) {
+            const mod = market.tradePolicy.importPriceModifier || 0;
+            weight *= Math.max(0, 1 + mod);
+          }
+        }
+
+        // Merchant buying from us (Exporting)
+        // Less tax (negative mod) = more attractive
+        // Lower price = more attractive
+        for (const resourceId of def.wantsToBuy) {
+          const market = this.station.market.resourceMarkets.get(resourceId);
+          if (market) {
+            const mod = market.tradePolicy.exportPriceModifier || 0;
+            // Avoid division by zero and extreme weights
+            const effectiveMod = Math.max(-0.9, mod);
+            weight *= 1 / (1 + effectiveMod);
+          }
+        }
+        return weight;
+      });
+
+      const merchantDef = getSeededWeightedRandom<MerchantDef>(
         this.seed,
         this.tickCount,
         merchantDefs,
+        weights,
       );
       const merchant = new Merchant(
         merchantDef.name || `Merchant ${this.tickCount}`,
