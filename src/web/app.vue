@@ -167,6 +167,7 @@ function startGame() {
 }
 
 function tick() {
+  // TODO: purge old history points.
   history.value.push({
     wealth: game.value.station.market.wealth,
     population: game.value.station.population,
