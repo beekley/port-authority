@@ -61,11 +61,16 @@ export class ResourceMarket {
     this.globalMarket = market;
   }
 
-  // Market is BUYING from a seller (Importing)
-  public quotePurchase(
-    quantity: Quantity,
-    proposedUnitPrice: Price,
-  ): Transaction {
+  public importPrice(): Price {
+    return this.price * (1 + (this.tradePolicy.importPriceModifier || 0));
+  }
+
+  public exportPrice(): Price {
+    return this.price * (1 + (this.tradePolicy.exportPriceModifier || 0));
+  }
+
+  // Sell to the market (Market is BUYING from a seller)
+  public import(quantity: Quantity): Transaction {
     if (this.tradePolicy.importForbidden) {
       return {
         resourceId: this.resourceId,
@@ -74,30 +79,36 @@ export class ResourceMarket {
       };
     }
 
-    // Apply policy to the proposed price
+    // Apply policy to the market price
     const policyMultiplier = 1 + (this.tradePolicy.importPriceModifier || 0);
-    const finalUnitPrice = proposedUnitPrice * policyMultiplier;
+    const finalUnitPrice = this.price * policyMultiplier;
 
     // Check affordability
-    const maxAffordable = Math.floor(this.globalMarket.wealth / finalUnitPrice);
-    const quantityToBuy = Math.min(quantity, maxAffordable);
+    let quantityToBuy = quantity;
+    if (finalUnitPrice > 0) {
+      const maxAffordable = Math.floor(
+        this.globalMarket.wealth / finalUnitPrice,
+      );
+      quantityToBuy = Math.min(quantity, maxAffordable);
+    }
 
-    return {
+    const transaction: Transaction = {
       resourceId: this.resourceId,
       quantity: quantityToBuy,
       totalPrice: quantityToBuy * finalUnitPrice,
     };
+
+    if (transaction.quantity > 0) {
+      this.globalMarket.wealth -= transaction.totalPrice;
+      this.tickProductionCount += transaction.quantity;
+      this.stock += transaction.quantity;
+    }
+
+    return transaction;
   }
 
-  public commitPurchase(transaction: Transaction): void {
-    if (transaction.quantity <= 0) return;
-    this.globalMarket.wealth -= transaction.totalPrice;
-    this.tickProductionCount += transaction.quantity;
-    this.stock += transaction.quantity;
-  }
-
-  // Market is SELLING to a buyer (Exporting)
-  public quoteSale(quantity: Quantity, proposedUnitPrice: Price): Transaction {
+  // Buy from the market (Market is SELLING to a buyer)
+  public export(quantity: Quantity): Transaction {
     if (this.tradePolicy.exportForbidden) {
       return {
         resourceId: this.resourceId,
@@ -106,7 +117,9 @@ export class ResourceMarket {
       };
     }
 
-    if (this.stock < quantity) {
+    const quantityToSell = Math.min(quantity, this.stock);
+
+    if (quantityToSell <= 0) {
       return {
         resourceId: this.resourceId,
         quantity: 0,
@@ -115,62 +128,46 @@ export class ResourceMarket {
     }
 
     const policyMultiplier = 1 + (this.tradePolicy.exportPriceModifier || 0);
-    const finalUnitPrice = proposedUnitPrice * policyMultiplier;
+    const finalUnitPrice = this.price * policyMultiplier;
 
-    return {
+    const transaction: Transaction = {
       resourceId: this.resourceId,
-      quantity,
-      totalPrice: quantity * finalUnitPrice,
+      quantity: quantityToSell,
+      totalPrice: quantityToSell * finalUnitPrice,
     };
+
+    if (transaction.quantity > 0) {
+      this.tickConsumptionCount += transaction.quantity;
+      this.stock -= transaction.quantity;
+      this.globalMarket.wealth += transaction.totalPrice;
+    }
+
+    return transaction;
   }
 
-  public commitSale(transaction: Transaction): void {
-    if (transaction.quantity <= 0) return;
-    this.tickConsumptionCount += transaction.quantity;
-    this.stock -= transaction.quantity;
-    this.globalMarket.wealth += transaction.totalPrice;
-  }
+  // Take from the market at no cost.
+  public consume(quantity: Quantity): Transaction {
+    const quantityToConsume = Math.min(quantity, this.stock);
 
-  public executePurchase(
-    quantity: Quantity,
-    proposedUnitPrice: Price,
-  ): Transaction {
-    const tx = this.quotePurchase(quantity, proposedUnitPrice);
-    if (tx.quantity > 0) this.commitPurchase(tx);
-    return tx;
-  }
-
-  public executeSale(
-    quantity: Quantity,
-    proposedUnitPrice: Price,
-  ): Transaction {
-    const tx = this.quoteSale(quantity, proposedUnitPrice);
-    if (tx.quantity > 0) this.commitSale(tx);
-    return tx;
-  }
-
-  // Like quoteSale + commitSale, but no money is exchanged.
-  public consumeFromMarket(quantity: Quantity): Transaction {
-    // Check if enough in stock.
-    if (this.stock < quantity) {
-      // Responsibility of caller to prevent this.
+    if (quantityToConsume <= 0) {
       return {
         resourceId: this.resourceId,
         quantity: 0,
         totalPrice: 0,
       };
     }
-    this.tickConsumptionCount += quantity;
-    this.stock -= quantity;
+
+    this.tickConsumptionCount += quantityToConsume;
+    this.stock -= quantityToConsume;
     return {
       resourceId: this.resourceId,
-      quantity,
+      quantity: quantityToConsume,
       totalPrice: 0,
     };
   }
 
-  // Like quotePurchase + commitPurchase, but no money is exchanged.
-  public giveToMarket(quantity: Quantity): Transaction {
+  // Give to the market at no cost.
+  public give(quantity: Quantity): Transaction {
     this.tickProductionCount += quantity;
     this.stock += quantity;
     return {

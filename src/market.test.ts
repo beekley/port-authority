@@ -23,9 +23,9 @@ describe("ResourceMarket", () => {
 
   it("should decrease stock and increase consumption count when buying from market", () => {
     // Market buys from merchant (Import) -> stock increases
-    market.executePurchase(100, market.price);
+    market.import(100);
     // Market sells to merchant (Export) -> stock decreases
-    market.executeSale(30, market.price);
+    market.export(30);
     expect(market.stock).toBe(70);
   });
 
@@ -39,7 +39,7 @@ describe("ResourceMarket", () => {
     );
 
     // Market Purchase (Import)
-    const tx = poorMarket.executePurchase(10, initialPrice);
+    const tx = poorMarket.import(10);
 
     expect(tx.quantity).toBe(1);
     expect(tx.totalPrice).toBe(100);
@@ -49,12 +49,12 @@ describe("ResourceMarket", () => {
 
   it("should maintain constant price regardless of supply and demand", () => {
     // High demand
-    market.executePurchase(50, market.price);
+    market.import(50);
     market.tick();
     expect(market.price).toBe(initialPrice);
 
     // High supply
-    market.executeSale(60, market.price);
+    market.export(60);
     market.tick();
     expect(market.price).toBe(initialPrice);
   });
@@ -62,7 +62,7 @@ describe("ResourceMarket", () => {
   describe("TradePolicy", () => {
     it("should forbid imports", () => {
       market.tradePolicy.importForbidden = true;
-      const tx = market.executePurchase(10, market.price);
+      const tx = market.import(10);
       expect(tx.quantity).toBe(0);
       expect(tx.totalPrice).toBe(0);
     });
@@ -71,7 +71,7 @@ describe("ResourceMarket", () => {
       market.tradePolicy.exportForbidden = true;
       // Stock up first
       market.stock = 100;
-      const tx = market.executeSale(10, market.price);
+      const tx = market.export(10);
       expect(tx.quantity).toBe(0);
       expect(tx.totalPrice).toBe(0);
     });
@@ -79,7 +79,7 @@ describe("ResourceMarket", () => {
     it("should apply import price modifier", () => {
       market.tradePolicy.importPriceModifier = 0.5; // +50%
       // Base price 100 * 1.5 = 150
-      const tx = market.executePurchase(10, market.price);
+      const tx = market.import(10);
       expect(tx.totalPrice).toBe(1500);
     });
 
@@ -87,7 +87,7 @@ describe("ResourceMarket", () => {
       market.tradePolicy.exportPriceModifier = -0.5; // -50%
       // Base price 100 * 0.5 = 50
       market.stock = 100;
-      const tx = market.executeSale(10, market.price);
+      const tx = market.export(10);
       expect(tx.totalPrice).toBe(500);
     });
   });

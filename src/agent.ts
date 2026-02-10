@@ -60,7 +60,7 @@ export class Agent {
         this.debug.log(`Agent could not sell ${resourceId}: no market`);
         continue;
       }
-      const transaction = market.giveToMarket(storedQuantity);
+      const transaction = market.give(storedQuantity);
       soldQuantity += transaction.quantity;
       this.storage.set(resourceId, storedQuantity - transaction.quantity);
       this.debug.log(`Gave ${transaction.quantity} ${resourceId} to market.`);
@@ -110,7 +110,7 @@ export class Agent {
       this.debug.log(`Agent could not buy ${quantity} ${resourceId}: no market`);
       return { resourceId, quantity: 0, totalPrice: 0 };
     }
-    const transaction = resourceMarket.consumeFromMarket(quantity);
+    const transaction = resourceMarket.consume(quantity);
     if (transaction.quantity > 0) {
       this.debug.log(
         `Agent consumed ${transaction.quantity} ${resourceId} for ${transaction.totalPrice.toFixed(2)} (full order)`,
@@ -128,7 +128,7 @@ export class Agent {
         this.debug.log(`Agent could not sell ${resourceId}: no market`);
         continue;
       }
-      const transaction = market.giveToMarket(storedQuantity);
+      const transaction = market.give(storedQuantity);
     }
     this.debug.log(`Agent ready for eviction`);
   }

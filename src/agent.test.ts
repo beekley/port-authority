@@ -25,7 +25,7 @@ describe("Agent", () => {
   });
 
   it("should buy needed resources for a recipe", () => {
-    foodMarket.executePurchase(1, 10); // Put 1 food in the market stock
+    foodMarket.give(1); // Put 1 food in the market stock
 
     agent.tick();
 
@@ -35,7 +35,7 @@ describe("Agent", () => {
 
   it("should produce resources and sell them to the market", () => {
     // Tick 1: Buy resources
-    foodMarket.executePurchase(1, 10);
+    foodMarket.give(1);
     agent.tick();
     expect(foodMarket.stock).toBe(0);
 
@@ -53,7 +53,7 @@ describe("Agent", () => {
     expect(agent.state).toBe("insufficient production");
 
     // Fill market and it should produce again.
-    foodMarket.executePurchase(1, 10);
+    foodMarket.give(1);
     agent.tick();
 
     expect(agent.state).toBe("producing");

@@ -89,9 +89,7 @@ export class Station {
     );
     if (Math.floor(neededFood) == 0) return;
     const availableFood = foodMarket.stock;
-    const transaction = foodMarket.consumeFromMarket(
-      availableFood >= neededFood ? neededFood : availableFood,
-    );
+    const transaction = foodMarket.consume(neededFood);
     this.debug.log(`Consuming ${transaction.quantity} / ${neededFood} food.`);
     if (transaction.quantity < neededFood) {
       this.starvingPopulation = Math.floor(

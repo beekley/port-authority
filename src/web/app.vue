@@ -29,7 +29,7 @@
         <tr>
           <th>Resource</th>
           <th>Stored</th>
-          <th>Price</th>
+          <th>Market Price</th>
           <th>Imports</th>
           <th>Exports</th>
         </tr>
