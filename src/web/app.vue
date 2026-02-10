@@ -67,6 +67,18 @@
 
     <hr />
 
+    <h3>Wealth History</h3>
+    <Chart :series="[history.map((p) => p.wealth)]" />
+    <h3>Pop History</h3>
+    <Chart
+      :series="[
+        history.map((p) => p.population),
+        history.map((p) => p.hungryPopulation),
+      ]"
+    />
+
+    <hr />
+
     <h2>Log</h2>
     <ul>
       <li v-for="(log, i) in reversedLogs" :key="i">
@@ -85,10 +97,19 @@ import MerchantRow from "./MerchantRow.vue";
 import { Merchant } from "../merchant";
 import ResourceRow from "./ResourceRow.vue";
 import { ResourceMarket } from "../market";
+import Chart from "./Chart.vue";
+
+interface HistoryPoint {
+  wealth: number;
+  population: number;
+  hungryPopulation: number;
+}
 
 const MAX_GAME_FPS = 8;
 const game = ref(new Game(getSeed()));
 const logs = ref<GameLogEvent[]>([]);
+const history = ref<HistoryPoint[]>([]);
+
 let gameSpeed = ref<"0.5" | "1" | "2" | "4" | "8">("1");
 let paused = ref(true);
 
@@ -129,20 +150,29 @@ function startGame() {
     if (!paused.value) {
       // These values assume MAX_GAME_FPS = 8
       if (gameSpeed.value === "8") {
-        game.value.tick();
+        tick();
       } else if (gameSpeed.value === "4" && i % 2 === 0) {
-        game.value.tick();
+        tick();
       } else if (gameSpeed.value === "2" && i % 4 === 0) {
-        game.value.tick();
+        tick();
       } else if (gameSpeed.value === "1" && i % 8 === 0) {
-        game.value.tick();
+        tick();
       } else if (gameSpeed.value === "0.5" && i % 16 === 0) {
-        game.value.tick();
+        tick();
       }
     }
     i++;
     i = i % (MAX_GAME_FPS * 2);
   }, 1000 / MAX_GAME_FPS);
+}
+
+function tick() {
+  history.value.push({
+    wealth: game.value.station.market.wealth,
+    population: game.value.station.population,
+    hungryPopulation: game.value.station.starvingPopulation,
+  });
+  game.value.tick();
 }
 
 watch(
