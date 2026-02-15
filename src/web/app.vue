@@ -3,6 +3,7 @@
   <div id="app">
     <h1>Port Authority</h1>
     <p>Day {{ game.day() }} {{ game.hour() }}:00, Tick: {{ game.tickCount }}</p>
+    <h2 v-if="game.state == 'LOSE'">GAME OVER. Refresh to restart</h2>
     <p>Port Wealth: ${{ game.station.market.wealth.toFixed(2) }}</p>
     <p>
       Port Pop: {{ game.station.population.toFixed(0) }}
@@ -210,6 +211,8 @@ function startGame() {
 }
 
 function tick() {
+  if (game.value.state == "LOSE") return;
+
   // TODO: purge old history points.
 
   const resourceHistoryPoint = new Map<ResourceID, ResourceHistoryPoint>();
@@ -228,6 +231,7 @@ function tick() {
     population: game.value.station.population,
     hungryPopulation: game.value.station.starvingPopulation,
   });
+
   game.value.tick();
 }
 

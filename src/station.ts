@@ -2,6 +2,7 @@ import { Agent } from "./agent";
 import { GlobalMarket, profitability } from "./market";
 import { Quantity, RecipeDef, Tick } from "./types";
 import { DebugLogger } from "./logging";
+import { Merchant } from "./merchant";
 
 // kg/day/person
 const HOURLY_FOOD_CONSUMPTION: Record<number, Quantity> = {
@@ -15,6 +16,7 @@ interface Facility {
 }
 
 export class Station {
+  private static starvingMigrationRate = 0.2;
   private debug: DebugLogger = new DebugLogger("Station");
   public readonly market: GlobalMarket;
   public readonly facilities: Facility[] = [];
@@ -43,6 +45,17 @@ export class Station {
     }
 
     this.availableRecipes = recipes;
+  }
+
+  public migratePop(merchant: Merchant) {
+    if (this.starvingPopulation <= 0) return;
+    // TODO: use ship passanger capacity.
+    const emigrationPop = Math.min(
+      Math.ceil(this.starvingPopulation * Station.starvingMigrationRate),
+      5,
+    );
+    this.starvingPopulation -= emigrationPop;
+    this.population -= emigrationPop;
   }
 
   public tick(tick: Tick) {

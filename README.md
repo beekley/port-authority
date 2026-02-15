@@ -6,8 +6,6 @@ This is a simulation game / recreational software where you play as the Port Aut
 
 ### Vertical slice
 
-- Fail state and restart
-- Show transactions
 - Balance
 - Show agents / facilities
 

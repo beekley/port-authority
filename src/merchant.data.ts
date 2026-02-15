@@ -9,6 +9,7 @@ export const merchantDefs: MerchantDef[] = [
     cargo: [["biomass", 20]],
     wantsToBuy: [],
     profitMargin: 0.1,
+    passangerCapacity: 5,
   },
   // Plastic exporter
   {
@@ -17,6 +18,7 @@ export const merchantDefs: MerchantDef[] = [
     cargo: [],
     wantsToBuy: ["plastic"],
     profitMargin: 0.2,
+    passangerCapacity: 3,
   },
   // Food trader
   {
@@ -25,5 +27,6 @@ export const merchantDefs: MerchantDef[] = [
     cargo: [["food", 15]],
     wantsToBuy: [],
     profitMargin: 0.05,
+    passangerCapacity: 12,
   },
 ];

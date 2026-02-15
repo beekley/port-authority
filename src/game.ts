@@ -26,6 +26,7 @@ export class Game {
   public readonly debug: DebugLogger;
   public readonly events: EventLogger;
 
+  public state: "PLAY" | "LOSE" = "PLAY";
   public readonly station: Station;
   public readonly visitingMerchants: {
     sinceTick: number;
@@ -58,6 +59,12 @@ export class Game {
       hour: this.hour,
       day: this.day,
     };
+
+    // Check Game state.
+    if (this.station.population <= 0) {
+      this.state = "LOSE";
+      return;
+    }
 
     // Update merchants.
     this.updateMerchants();
@@ -180,6 +187,7 @@ export class Game {
 
       // Merchant leaves if it's time for them to go
       if (this.tickCount - sinceTick > MERCHANT_TICK_DURATION) {
+        this.station.migratePop(merchant);
         this.visitingMerchants.splice(
           this.visitingMerchants.indexOf({ sinceTick, merchant }),
           1,

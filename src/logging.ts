@@ -45,7 +45,7 @@ export class DebugLogger {
   }
 
   public log(message: string) {
-    if (isNode && process.env.LOGGING === SILENT) return;
+    if (!isNode || process.env.LOGGING === SILENT) return;
 
     const prefix = `[${this.id}]`;
     const formattedMessage = `${prefix} ${message}`;

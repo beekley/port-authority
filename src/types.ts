@@ -52,6 +52,8 @@ export interface MerchantDef {
   cargo: [ResourceID, Quantity][];
   wantsToBuy: ResourceID[];
   profitMargin: Fraction;
+  // Unused
+  passangerCapacity: Quantity;
 }
 
 export interface GameState {
