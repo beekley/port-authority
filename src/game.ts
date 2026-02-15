@@ -16,8 +16,8 @@ import {
 import { getSeededWeightedRandom } from "./util";
 import { DebugLogger, EventLogger } from "./logging";
 
-const MERCHANT_TICK_INTERVAL = 24;
-const MERCHANT_TICK_DURATION = 1;
+const MERCHANT_TICK_INTERVAL = 5;
+const MERCHANT_TICK_DURATION = 3;
 
 // TODOs:
 // - player can set tarrifs / subsidies
@@ -31,6 +31,7 @@ export class Game {
     sinceTick: number;
     merchant: Merchant;
   }[] = [];
+  private lastTickWithMerchant = 0;
 
   public tickCount = 0;
   private readonly seed: number;
@@ -114,17 +115,10 @@ export class Game {
   }
 
   private updateMerchants() {
-    // Get the most recent tick that had a new merchant
-    let lastTickWithMerchant = 0;
-    for (const { sinceTick } of this.visitingMerchants) {
-      if (sinceTick > lastTickWithMerchant) {
-        lastTickWithMerchant = sinceTick;
-      }
-    }
-
     // If it's time for a new merchant, add one
     // TODO: Check that there isn't a duplicate merchant, if we ever make them unique.
-    if (this.tickCount - lastTickWithMerchant > MERCHANT_TICK_INTERVAL) {
+    if (this.tickCount - this.lastTickWithMerchant > MERCHANT_TICK_INTERVAL) {
+      this.lastTickWithMerchant = this.tickCount;
       const weights = merchantDefs.map((def) => {
         let weight = 10; // Base weight
 

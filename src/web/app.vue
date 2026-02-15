@@ -32,6 +32,7 @@
           <th>Market Price</th>
           <th>Imports</th>
           <th>Exports</th>
+          <th>Graph</th>
         </tr>
       </thead>
       <tbody>
@@ -77,6 +78,40 @@
       ]"
     />
 
+    <div v-for="[resourceId, market] in game.station.market.resourceMarkets">
+      <h3>{{ resourceId.toUpperCase() }} History</h3>
+      <h4>Stock</h4>
+      <Chart
+        :series="[
+          resourceHistory.map((p) => {
+            const h = p.get(resourceId);
+            if (!h) return 0;
+            return h.stock;
+          }),
+        ]"
+      />
+      <h4>Price</h4>
+      <Chart
+        :series="[
+          resourceHistory.map((p) => {
+            const h = p.get(resourceId);
+            if (!h) return 0;
+            return h.price;
+          }),
+          resourceHistory.map((p) => {
+            const h = p.get(resourceId);
+            if (!h) return 0;
+            return h.importPrice;
+          }),
+          resourceHistory.map((p) => {
+            const h = p.get(resourceId);
+            if (!h) return 0;
+            return h.exportPrice;
+          }),
+        ]"
+      />
+    </div>
+
     <hr />
 
     <h2>Log</h2>
@@ -92,12 +127,19 @@
 import { computed, ref, watch } from "vue";
 import { Game } from "../game";
 import { getSeed } from "../util";
-import { GameLogEvent, ResourceID } from "../types";
+import { GameLogEvent, Price, Quantity, ResourceID } from "../types";
 import MerchantRow from "./MerchantRow.vue";
 import { Merchant } from "../merchant";
 import ResourceRow from "./ResourceRow.vue";
 import { ResourceMarket } from "../market";
 import Chart from "./Chart.vue";
+
+interface ResourceHistoryPoint {
+  stock: Quantity;
+  price: Price;
+  importPrice: Price;
+  exportPrice: Price;
+}
 
 interface HistoryPoint {
   wealth: number;
@@ -109,6 +151,7 @@ const MAX_GAME_FPS = 8;
 const game = ref(new Game(getSeed()));
 const logs = ref<GameLogEvent[]>([]);
 const history = ref<HistoryPoint[]>([]);
+const resourceHistory = ref<Map<ResourceID, ResourceHistoryPoint>[]>([]);
 
 let gameSpeed = ref<"0.5" | "1" | "2" | "4" | "8">("1");
 let paused = ref(true);
@@ -168,6 +211,18 @@ function startGame() {
 
 function tick() {
   // TODO: purge old history points.
+
+  const resourceHistoryPoint = new Map<ResourceID, ResourceHistoryPoint>();
+  for (let [resourceId, market] of game.value.station.market.resourceMarkets) {
+    resourceHistoryPoint.set(resourceId, {
+      stock: market.stock,
+      price: market.price,
+      importPrice: market.importPrice(),
+      exportPrice: market.exportPrice(),
+    });
+  }
+  resourceHistory.value.push(resourceHistoryPoint);
+
   history.value.push({
     wealth: game.value.station.market.wealth,
     population: game.value.station.population,

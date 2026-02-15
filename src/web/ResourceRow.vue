@@ -6,14 +6,18 @@
     <td>
       ${{ market.importPrice().toFixed(2) }} / {{ unit }}
       <button @click="setPolicy('BANNED', 'import')">Ban</button>
-      <button @click="setPolicy('NEUTRAL', 'import')">+0%</button>
-      <button @click="setPolicy('SUBSIDY', 'import')">+50%</button>
+      <button @click="setPolicy('NEUTRAL', 'import')">Allow</button>
+      <button @click="setPolicy('SUBSIDY', 'import')">Subsidize</button>
     </td>
     <td>
       ${{ market.exportPrice().toFixed(2) }} / {{ unit }}
       <button @click="setPolicy('BANNED', 'export')">Ban</button>
-      <button @click="setPolicy('NEUTRAL', 'export')">-0%</button>
-      <button @click="setPolicy('SUBSIDY', 'export')">-50%</button>
+      <button @click="setPolicy('NEUTRAL', 'export')">Allow</button>
+      <button @click="setPolicy('SUBSIDY', 'export')">Subsidize</button>
+    </td>
+    <td>
+      <!-- TODO: make this toggle the graph -->
+      <button @click="$emit('toggleGraph', market.resourceId)">Toggle</button>
     </td>
   </tr>
 </template>

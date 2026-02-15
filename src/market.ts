@@ -9,6 +9,8 @@ import {
 } from "./types";
 import { DebugLogger } from "./logging";
 
+const DEFAULT_TRADE_MARGIN = 0.2;
+
 export class GlobalMarket {
   resourceMarkets: Map<ResourceID, ResourceMarket> = new Map();
   wealth: Price = 100;
@@ -62,11 +64,17 @@ export class ResourceMarket {
   }
 
   public importPrice(): Price {
-    return this.price * (1 + (this.tradePolicy.importPriceModifier || 0));
+    return (
+      this.price *
+      (1 + DEFAULT_TRADE_MARGIN + (this.tradePolicy.importPriceModifier || 0))
+    );
   }
 
   public exportPrice(): Price {
-    return this.price * (1 + (this.tradePolicy.exportPriceModifier || 0));
+    return (
+      this.price *
+      (1 - DEFAULT_TRADE_MARGIN + (this.tradePolicy.exportPriceModifier || 0))
+    );
   }
 
   // Sell to the market (Market is BUYING from a seller)

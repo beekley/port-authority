@@ -81,7 +81,7 @@ export class Merchant {
       this.wealth += transaction.totalPrice;
       this.cargo.set(resourceId, cargoQuantity - transaction.quantity);
 
-      const log = `Merchant sold ${
+      const log = `${this.name} sold ${
         transaction.quantity
       } ${resourceId} for ${transaction.totalPrice.toFixed(2)}`;
       this.debug.log(log);
@@ -128,7 +128,7 @@ export class Merchant {
       this.wealth -= transaction.totalPrice;
       const currentCargo = this.cargo.get(resourceId) || 0;
       this.cargo.set(resourceId, currentCargo + transaction.quantity);
-      const log = `Merchant bought ${
+      const log = `${this.name} bought ${
         transaction.quantity
       } ${resourceId} for ${transaction.totalPrice.toFixed(2)}`;
       this.debug.log(log);
