@@ -26,7 +26,7 @@ export class Game {
   public readonly debug: DebugLogger;
   public readonly events: EventLogger;
 
-  public state: "PLAY" | "LOSE" = "PLAY";
+  public state: "INTRO" | "PLAY" | "LOSE" = "INTRO";
   public readonly station: Station;
   public readonly visitingMerchants: {
     sinceTick: number;
