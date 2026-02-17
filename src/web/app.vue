@@ -3,7 +3,7 @@
     <Intro @start="startGame" />
   </div>
   <div id="game" v-if="game.state == 'PLAY' || game.state == 'LOSE'">
-    <Game :game="game" />
+    <Game :game="game as GameClass" />
   </div>
 </template>
 
